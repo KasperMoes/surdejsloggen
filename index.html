@@ -241,6 +241,15 @@ header.top{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 16px);position:
 .install .share{display:inline-block;width:1.1em;height:1.1em;vertical-align:-.2em}
 .note{border-top:1px dashed var(--ink);padding-top:10px;font-size:.85rem;margin:0}
 .backup p{margin:0}
+.gwrap{position:relative}
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.gallery::-webkit-scrollbar{display:none}
+.gallery img{flex:0 0 100%;width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:start;display:block;background:var(--accent-soft)}
+.gcount{position:absolute;top:8px;right:8px;background:var(--ink);color:var(--surface);font:700 .75rem var(--mono);padding:2px 7px;pointer-events:none}
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.thumb{position:relative}
+.thumb img{width:100%;max-width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--accent-soft)}
+.thumb button{position:absolute;top:4px;right:4px;width:30px;height:30px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer;padding:0}
 .ok{font-weight:700;color:var(--good)}
 </style>
 </head>
@@ -327,13 +336,12 @@ header.top{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 16px);position:
       <fieldset>
         <legend>Billede &amp; tekst</legend>
         <div class="photopick" id="photoPick">
-          <img id="photoPrev" alt="Valgt billede" hidden>
+          <div class="thumbs" id="thumbs"></div>
           <label class="photobtn" id="photoLbl" for="f-photo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-            <span id="photoLblTxt">Tilføj billede</span>
-            <input type="file" id="f-photo" accept="image/*" class="vh">
+            <span id="photoLblTxt">Tilføj billeder</span>
+            <input type="file" id="f-photo" accept="image/*" multiple class="vh">
           </label>
-          <button type="button" class="linkbtn" id="photoRemove" hidden>Fjern billede</button>
         </div>
         <label class="f" for="f-caption">Tekst <span class="u">(valgfri)</span><textarea id="f-caption" placeholder="Fx: Første forsøg med rug – flot ovnspring!"></textarea></label>
       </fieldset>
@@ -450,21 +458,13 @@ const photos = {
 };
 const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
 const lsSet = (k,v) => { try{ localStorage.setItem(k,v); }catch(e){} };
-const EXAMPLES = [
-  {id:"ex1",example:true,date:"2026-09-20",kind:"bread",name:"Landbrød",flours:[{type:"Hvedemel",g:400},{type:"Fuldkornshvedemel",g:100}],water:350,salt:10,starter:100,extras:"",bulk:5,cold:14,proof:0,temp:250,time:45,ovenMode:"overunder",overall:4,rise:4,crumb:4,crust:5,taste:4,caption:"Søndagsbrød med lidt fuldkorn. Sprød skorpe og pæn åben krumme.",notes:"Eksempel – slet det, når du har logget dine egne bagninger.",created:1},
-  {id:"ex2",example:true,date:"2026-09-27",kind:"bread",name:"Landbrød",flours:[{type:"Hvedemel",g:350},{type:"Rugmel",g:150}],water:390,salt:10,starter:100,extras:"",bulk:4.5,cold:12,proof:0,temp:250,time:45,ovenMode:"overunder",overall:3,rise:2,crumb:3,crust:4,taste:4,caption:"",notes:"Eksempel – flød lidt ud, måske for vådt med rugmelet.",created:2},
-  {id:"ex3",example:true,date:"2026-10-03",kind:"buns",name:"Speltboller",flours:[{type:"Spelt",g:300},{type:"Hvedemel",g:200}],water:300,salt:10,starter:75,extras:"20 g smør, 15 g honning",bulk:4,cold:10,proof:1.5,temp:220,time:18,ovenMode:"varmluft",overall:5,rise:5,crumb:4,crust:4,taste:5,caption:"Bløde speltboller til morgenmaden – forsvandt på ti minutter.",notes:"Eksempel.",created:3}
-];
 const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
 
 async function init(){
   try{
     idb = await openDB();
     bakes = await tx("bakes","readonly",s=>s.getAll()) || [];
-    if(!bakes.length && !lsGet("seeded")){
-      for(const ex of EXAMPLES) await store.save(ex);
-      lsSet("seeded","1");
-    }
+    for(const ex of bakes.filter(b=>b.example)) await store.remove(ex.id);
   }catch(e){
     $("#emptyLog").innerHTML = "<h2>Appen kan ikke gemme</h2><p>Telefonen tillader ikke, at appen gemmer data. Slå privat browsing fra, eller installér appen på hjemmeskærmen.</p>";
   }
@@ -537,7 +537,7 @@ function renderLog(){
     const bar=(b.flours||[]).filter(f=>n(f.g)>0).map(f=>`<span style="width:${n(f.g)/c.flourG*100}%;background:${flourColor(f.type)}" title="${esc(f.type)}"></span>`).join("");
     const rot = ((b.id.charCodeAt(b.id.length-1)%9)-4)||-3;
     return `<li><article class="post" tabindex="0" role="button" data-id="${esc(b.id)}" aria-label="${esc(b.name||"Uden navn")}">
-      ${b.photo?`<img class="ph" data-photo="${esc(b.photo)}" alt="Billede af ${esc(b.name||"bagningen")}" loading="lazy">`:""}
+      ${gallery(b)}
       <div class="trow"><span class="title">${esc(b.name||"Uden navn")}</span>${b.overall?`<span class="stamp" style="--rot:${rot}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
       ${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}
       <div class="ticket"><span>${esc(shortDate(b.date))}</span><span>${b.kind==="buns"?"Boller":"Brød"}</span><span>Mel ${Math.round(c.flourG)} g</span>${b.time?`<span>${esc(b.time)} min</span>`:""}${b.example?'<span class="tag">Eksempel</span>':""}</div>
@@ -559,7 +559,7 @@ function openDetail(id){
   $("#v-detail").innerHTML = `
     <button class="linkbtn" id="backBtn">← Alle bagninger</button>
     <div class="detail">
-      ${b.photo?`<img class="dphoto" data-photo="${esc(b.photo)}" alt="Billede af ${esc(b.name||"bagningen")}">`:""}
+      ${gallery(b)}
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
         <div style="min-width:0"><span class="kind ${b.kind==="buns"?"buns":"bread"}">${b.kind==="buns"?"Boller":"Brød"}</span> ${b.example?'<span class="tag">Eksempel</span>':""}
           <h2 style="overflow-wrap:anywhere">${esc(b.name||"Uden navn")}</h2>
@@ -600,7 +600,7 @@ function openDetail(id){
   const del=$("#delBtn"); let armed=false;
   del.onclick=async()=>{
     if(!armed){ armed=true; del.classList.add("armed"); del.textContent="Tryk igen for at slette"; setTimeout(()=>{ if(del.isConnected){armed=false;del.classList.remove("armed");del.textContent="Slet";} },4000); return; }
-    try{ await store.remove(b.id); if(b.photo) photos.del(b.photo).catch(()=>{}); show("log"); render(); }catch(e){ del.textContent="Kunne ikke slette – prøv igen"; }
+    try{ await store.remove(b.id); picsOf(b).forEach(id=>photos.del(id).catch(()=>{})); show("log"); render(); }catch(e){ del.textContent="Kunne ikke slette – prøv igen"; }
   };
   show("detail");
 }
@@ -666,7 +666,7 @@ function openForm(b, asNew){
   ratings = editing ? {overall:b.overall,rise:b.rise,crumb:b.crumb,crust:b.crust,taste:b.taste} : {};
   set("f-notes", editing ? b.notes : "");
   set("f-caption", editing ? b.caption : "");
-  setPhoto(editing && b.photo ? {keepId:b.photo} : {});
+  setPics(editing ? picsOf(b).map(id=>({id})) : []);
   $("#formErr").hidden=true;
   // datalists
   $("#recipes").innerHTML=[...new Set(bakes.map(x=>x.name).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join("");
@@ -682,27 +682,29 @@ $("#form").addEventListener("submit",async e=>{
   const id = editing ? editing.id : "b"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   const rec = {id, ...data, created: editing ? (editing.created||Date.now()) : Date.now()};
   const btn=$("#saveBtn"); btn.disabled=true; btn.textContent="Gemmer…";
-  let photo = photoState.keepId || null;
-  if(photoState.blob){
-    try{
-      photo = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-      await photos.put(photo, photoState.blob);
-    }catch(ex){
-      err.textContent = "Billedet kunne ikke gemmes. Måske er telefonen ved at løbe tør for plads.";
-      err.hidden=false; btn.disabled=false; btn.textContent="Gem bagning"; return;
+  const pics = [];
+  try{
+    for(const it of picItems){
+      if(it.id){ pics.push(it.id); continue; }
+      const pid = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+      await photos.put(pid, it.blob); pics.push(pid);
     }
+  }catch(ex){
+    err.textContent = "Billederne kunne ikke gemmes. Måske er telefonen ved at løbe tør for plads.";
+    err.hidden=false; btn.disabled=false; btn.textContent="Gem bagning"; return;
   }
-  rec.photo = photo;
-  const oldPhoto = editing && editing.photo;
+  rec.pics = pics; delete rec.photo;
+  const oldPics = editing ? picsOf(editing) : [];
   try{ await store.save(rec);
-    if(oldPhoto && oldPhoto!==photo) photos.del(oldPhoto).catch(()=>{});
-    photoState.blob=null; render(); openDetail(id); }
+    oldPics.filter(id=>!pics.includes(id)).forEach(id=>photos.del(id).catch(()=>{}));
+    setPics([]); render(); openDetail(id); }
   catch(ex){ err.textContent="Bagningen blev ikke gemt. Prøv at trykke Gem igen."; err.hidden=false; }
   finally{ btn.disabled=false; btn.textContent="Gem bagning"; }
 });
 
 /* ---------- photos ---------- */
-let photoState = {keepId:null, blob:null, url:null};
+let picItems = [];   // [{id} existing | {blob,url} new]
+const picsOf = b => Array.isArray(b.pics) ? b.pics : (b.photo ? [b.photo] : []);
 const photoUrls = new Map();
 async function photoUrl(id){
   if(photoUrls.has(id)) return photoUrls.get(id);
@@ -710,25 +712,35 @@ async function photoUrl(id){
   if(!blob) return null;
   const u = URL.createObjectURL(blob); photoUrls.set(id,u); return u;
 }
+function gallery(b){
+  const ids = picsOf(b); if(!ids.length) return "";
+  const alt = esc(b.name||"bagningen");
+  return `<div class="gwrap"><div class="gallery">${ids.map((id,i)=>`<img data-photo="${esc(id)}" alt="Billede ${i+1} af ${alt}" loading="lazy">`).join("")}</div>${ids.length>1?`<span class="gcount">1/${ids.length}</span>`:""}</div>`;
+}
 function wireImgs(root){
   root.querySelectorAll("img[data-photo]").forEach(async img=>{
     try{ const u = await photoUrl(img.dataset.photo); if(u) img.src = u; else img.remove(); }catch(e){ img.remove(); }
   });
+  root.querySelectorAll(".gwrap").forEach(w=>{
+    const g = w.querySelector(".gallery"), c = w.querySelector(".gcount"); if(!c) return;
+    const total = g.children.length;
+    g.addEventListener("scroll",()=>{ const i = Math.round(g.scrollLeft / Math.max(1,g.clientWidth)); c.textContent = (Math.min(i,total-1)+1) + "/" + total; },{passive:true});
+    g.addEventListener("click",e=>{ if(Math.abs(g.scrollLeft % Math.max(1,g.clientWidth))>8) e.stopPropagation(); });
+  });
 }
-async function updatePhotoUI(){
-  const has = !!(photoState.blob || photoState.keepId);
-  const prev = $("#photoPrev");
-  if(photoState.url) prev.src = photoState.url;
-  else if(photoState.keepId){ try{ const u = await photoUrl(photoState.keepId); if(u) prev.src = u; }catch(e){} }
-  else prev.removeAttribute("src");
-  prev.hidden = !has;
-  $("#photoRemove").hidden = !has;
-  $("#photoLblTxt").textContent = has ? "Skift billede" : "Tilføj billede";
+async function renderThumbs(){
+  const box = $("#thumbs");
+  box.innerHTML = picItems.map((it,i)=>`<div class="thumb"><img alt="Billede ${i+1}" data-i="${i}"><button type="button" aria-label="Fjern billede ${i+1}" data-rm="${i}">✕</button></div>`).join("");
+  box.querySelectorAll("button[data-rm]").forEach(b=>b.onclick=()=>{ const it = picItems.splice(+b.dataset.rm,1)[0]; if(it && it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} renderThumbs(); });
+  for(const img of box.querySelectorAll("img[data-i]")){
+    const it = picItems[+img.dataset.i];
+    try{ img.src = it.url || await photoUrl(it.id) || ""; }catch(e){}
+  }
+  $("#photoLblTxt").textContent = picItems.length ? "Tilføj flere billeder" : "Tilføj billeder";
 }
-function setPhoto(s){
-  if(photoState.url) try{ URL.revokeObjectURL(photoState.url); }catch(e){}
-  photoState = {keepId:s.keepId||null, blob:s.blob||null, url:s.blob?URL.createObjectURL(s.blob):null};
-  updatePhotoUI();
+function setPics(items){
+  picItems.forEach(it=>{ if(it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} });
+  picItems = items.slice(); renderThumbs();
 }
 async function shrink(file){
   try{
@@ -741,13 +753,13 @@ async function shrink(file){
   }catch(e){ return file; }
 }
 $("#f-photo").addEventListener("change", async e=>{
-  const f = e.target.files && e.target.files[0]; e.target.value="";
-  if(!f) return;
-  $("#photoLblTxt").textContent="Klargør billede…";
-  const blob = await shrink(f);
-  setPhoto({blob});
+  const files = Array.from(e.target.files || []); e.target.value="";
+  if(!files.length) return;
+  $("#photoLblTxt").textContent="Klargør billeder…";
+  for(const f of files){ const blob = await shrink(f); picItems.push({blob, url:URL.createObjectURL(blob)}); }
+  renderThumbs();
 });
-$("#photoRemove").onclick=()=>setPhoto({});
+
 /* ---------- backup ---------- */
 $("#backupBtn").onclick = () => { $("#backupMsg").textContent=""; show("backup"); };
 $("#backupBack").onclick = () => show("log");
@@ -757,7 +769,7 @@ $("#exportBtn").onclick = async () => {
   const msg = $("#backupMsg"); msg.className=""; msg.textContent = "Samler backup…";
   try{
     const pics = {};
-    for(const b of bakes){ if(b.photo){ const bl = await photos.get(b.photo); if(bl) pics[b.photo] = await blobToDataUrl(bl); } }
+    for(const b of bakes){ for(const id of picsOf(b)){ const bl = await photos.get(id); if(bl) pics[id] = await blobToDataUrl(bl); } }
     const json = JSON.stringify({app:"surdejsloggen", version:1, exported:new Date().toISOString(), bakes, photos:pics});
     const name = "surdejsloggen-backup-" + new Date().toISOString().slice(0,10) + ".json";
     const file = new File([json], name, {type:"application/json"});
