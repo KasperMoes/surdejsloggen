@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Surdejsloggen</title>
-<meta name="description" content="Bagejournal til surdejsbrød og -boller.">
+<meta name="description" content="Bagejournal til surdejsbrød og -boller – del dine bagninger med venner.">
 <meta name="theme-color" content="#EFE9DF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -21,7 +21,7 @@
 @font-face{font-family:"Courier Prime";font-weight:400;font-display:swap;src:url("fonts/courier-prime-latin-400-normal.woff2") format("woff2")}
 @font-face{font-family:"Courier Prime";font-weight:700;font-display:swap;src:url("fonts/courier-prime-latin-700-normal.woff2") format("woff2")}
 
-/* Layout: 7a "Mel & creme" – søgepille og ikonfaner øverst, opskrifter som store fliser i to kolonner, fast menu i bunden. Ét lyst look. */
+/* Layout: 7a "Mel & creme". Feed (venner) · Opskrifter (store fliser) · Ny bagning · Venner. Fast menu i bunden. Ét lyst look. */
 :root{
   --bg:#EFE9DF; --surf:#FFFFFF; --ink:#2A211A; --muted:#5E4E3E; --line:rgba(42,33,26,.18); --soft:rgba(42,33,26,.12);
   --stamp:#B5452A; --ph:#E2D6C2; --accent:#B5452A; --good:#3E6B45;
@@ -39,6 +39,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 a{color:inherit}
 .wrap{padding-inline:16px}
+.muted{color:var(--muted)}
 
 /* ---------- splash ---------- */
 #splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .45s ease}
@@ -52,6 +53,11 @@ a{color:inherit}
 }
 @keyframes pop{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
 @keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- page headers ---------- */
+.phead{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 12px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;border-bottom:1px solid var(--line)}
+.phead h1{font-size:2.2rem}
+.smallbtn{border:2px solid var(--ink);background:var(--surf);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.8rem;cursor:pointer}
 
 /* ---------- top (search + tabs) ---------- */
 .top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0;display:flex;flex-direction:column;gap:14px}
@@ -85,6 +91,23 @@ a{color:inherit}
 .empty{margin:28px 16px;padding:22px 18px;background:var(--surf);border-radius:14px;box-shadow:3px 3px 0 var(--ink);text-align:center}
 .empty h2{font-size:1.6rem;margin-bottom:8px}
 .empty p{margin:0 0 14px}
+.banner{margin:14px 16px 0;padding:14px;background:var(--surf);border-radius:14px;box-shadow:3px 3px 0 var(--ink);display:flex;flex-direction:column;gap:10px}
+.banner p{margin:0}
+
+/* ---------- feed ---------- */
+.feed{display:flex;flex-direction:column;gap:18px;padding:16px}
+.post{background:var(--surf);border-radius:16px;box-shadow:3px 3px 0 var(--ink);overflow:hidden;display:flex;flex-direction:column}
+.who{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.av{flex:none;width:40px;height:40px;border-radius:50%;background:var(--ph);display:grid;place-items:center;font:900 1.05rem/1 var(--display);text-transform:uppercase;border:2px solid var(--ink)}
+.who .nm{flex:1;min-width:0;display:flex;flex-direction:column}
+.who .nm b{font-size:.92rem}
+.who .nm small{font-size:.75rem;color:var(--muted)}
+.pgal{position:relative;aspect-ratio:4/3;background:var(--ph)}
+.pgal .gallery img{height:100%}
+.pbody{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;background:none;border:0;text-align:left;width:100%}
+.ptitle{font:900 1.5rem/1 var(--display);text-transform:uppercase}
+.ticket{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:.75rem;text-transform:uppercase;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px;margin-top:2px}
+.post .cap{font-size:.9rem}
 
 /* ---------- buttons ---------- */
 .btn{border:2px solid var(--ink);background:var(--surf);border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;text-align:center}
@@ -92,12 +115,14 @@ a{color:inherit}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:var(--surf)}
 .btn.danger{color:var(--stamp);border-color:var(--stamp)}
 .btn.danger.armed{background:var(--stamp);color:#fff}
+.btn.sm{padding:6px 12px;font-size:.8rem;border-radius:999px}
+.btn:disabled{opacity:.55;cursor:default}
 .linkbtn{background:none;border:0;padding:4px 0;font-weight:700;text-decoration:underline;cursor:pointer}
 .circle{position:absolute;width:38px;height:38px;border-radius:50%;border:0;background:var(--surf);box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
 .circle svg{width:16px;height:16px}
 
 /* ---------- recipe & bake pages ---------- */
-.hero{position:relative;height:300px;background:var(--ph);margin-inline:auto}
+.hero{position:relative;height:300px;background:var(--ph)}
 .hero .collage{position:absolute;inset:0;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:2px}
 .hero .collage>*:first-child{grid-row:span 2}
 .hero .collage.one{grid-template-columns:1fr;grid-template-rows:1fr}
@@ -108,28 +133,33 @@ a{color:inherit}
 .hero .noimg svg{width:34%;max-width:150px}
 .hero .back{top:calc(env(safe-area-inset-top,0px) + 14px);left:16px}
 .hero .edit{top:calc(env(safe-area-inset-top,0px) + 14px);right:16px}
-.hero .count{position:absolute;bottom:30px;right:14px;background:rgba(42,33,26,.78);color:#fff;padding:3px 9px;border-radius:8px;font-size:.75rem;pointer-events:none}
+.count{position:absolute;bottom:12px;right:12px;background:rgba(42,33,26,.78);color:#fff;padding:3px 9px;border-radius:8px;font-size:.75rem;pointer-events:none}
+.hero .count{bottom:30px}
 .gallery{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .gallery::-webkit-scrollbar{display:none}
-.gallery img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start}
+.gallery img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;background:var(--ph)}
 .sheet{position:relative;margin-top:-18px;background:var(--bg);border-radius:22px 22px 0 0;padding:22px 16px 16px;display:flex;flex-direction:column;gap:14px}
 .sheet h1{font-size:2.3rem}
 .meta{font-size:.82rem;color:var(--muted)}
 .titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .titlerow .stamp{font-size:1.15rem;margin-top:4px}
+.byline{display:flex;align-items:center;gap:10px;font-size:.85rem}
+.byline .av{width:32px;height:32px;font-size:.9rem}
 .stats{background:var(--surf);border-radius:14px;box-shadow:3px 3px 0 var(--ink);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));text-align:center;padding:12px 0}
 .stats div{display:flex;flex-direction:column;padding:0 4px}
 .stats div+div{border-left:1px solid var(--line)}
 .stats b{font-size:1.2rem}
 .stats span{font-size:.7rem;color:var(--muted)}
 .rows{display:flex;flex-direction:column}
-.row{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;width:100%}
+.row{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;width:100%}
+button.row{cursor:pointer}
 .row .th{flex:0 0 56px;height:56px;border-radius:10px;overflow:hidden;background:var(--ph);position:relative}
 .row .th img,.row .th .noimg{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .row .tx{flex:1;min-width:0;display:flex;flex-direction:column}
 .row .tx b{font-size:.92rem}
 .row .tx span{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .stamp{font-size:.8rem}
+.row .acts{display:flex;gap:6px;flex:none}
 .info{display:flex;flex-direction:column;gap:12px;font-size:.9rem;border-top:1px solid var(--line);padding-top:14px}
 .info>div{display:flex;gap:14px;align-items:flex-start}
 .info svg{flex:none;width:24px;height:24px;margin-top:2px}
@@ -146,12 +176,7 @@ a{color:inherit}
 .bottombar span{font-size:.78rem;display:flex;flex-direction:column}
 .bottombar span b{font-size:.92rem}
 
-/* ---------- page header (log, form, backup) ---------- */
-.phead{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 12px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;border-bottom:1px solid var(--line)}
-.phead h1{font-size:2.2rem}
-.phead .smallbtn{border:2px solid var(--ink);background:var(--surf);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.8rem;cursor:pointer}
-
-/* ---------- form ---------- */
+/* ---------- forms ---------- */
 form{display:flex;flex-direction:column;gap:22px;padding:16px}
 fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 legend{font:900 1.4rem/1 var(--display);text-transform:uppercase;margin-bottom:10px;padding:0}
@@ -160,7 +185,7 @@ legend{font:900 1.4rem/1 var(--display);text-transform:uppercase;margin-bottom:1
 @media (max-width:370px){.g3{grid-template-columns:1fr 1fr}}
 label.f,div.f{display:flex;flex-direction:column;gap:4px;font-size:.75rem;font-weight:700;min-width:0}
 label.f .u{font-weight:400;color:var(--muted)}
-input[type=text],input[type=number],input[type=date],select.inp,textarea{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0;font-size:16px}
+input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],input[type=search].plain,textarea{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0;font-size:16px}
 input:focus,textarea:focus{border-color:var(--ink);outline:none}
 textarea{min-height:76px;resize:vertical}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -186,9 +211,25 @@ textarea{min-height:76px;resize:vertical}
 .rate.small button{font-size:1.3rem}
 .rate button.on{color:var(--accent)}
 .err{color:var(--stamp);font-weight:700;margin:0}
-.ok{color:var(--good);font-weight:700}
+.ok{color:var(--good);font-weight:700;margin:0}
 
-/* ---------- install / backup ---------- */
+/* ---------- auth ---------- */
+.auth{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 24px) 16px 24px;gap:20px}
+.brand{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.brand svg{width:96px;height:96px}
+.brand h1{font-size:2.6rem}
+.authcard{background:var(--surf);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:18px;display:flex;flex-direction:column;gap:14px}
+.authcard form{padding:0;gap:12px}
+.authcard .seg{margin-bottom:4px}
+
+/* ---------- friends ---------- */
+.section{padding:16px;display:flex;flex-direction:column;gap:10px}
+.section h2{font-size:1.5rem}
+.me{display:flex;align-items:center;gap:12px}
+.me .av{width:56px;height:56px;font-size:1.4rem}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;position:absolute;top:4px;margin-left:16px}
+
+/* ---------- install ---------- */
 .card{margin:16px;background:var(--surf);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:18px;display:flex;flex-direction:column;gap:14px}
 .card h2{font-size:1.9rem}
 .card p{margin:0}
@@ -200,10 +241,11 @@ textarea{min-height:76px;resize:vertical}
 
 /* ---------- bottom nav ---------- */
 nav.menu{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surf);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-nav.menu .in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:640px;margin:0 auto}
-nav.menu button{background:none;border:0;padding:9px 4px 11px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem;font-weight:700;color:var(--muted);cursor:pointer}
+nav.menu .in{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:640px;margin:0 auto}
+nav.menu button{position:relative;background:none;border:0;padding:9px 4px 11px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem;font-weight:700;color:var(--muted);cursor:pointer}
 nav.menu button svg{width:24px;height:24px}
 nav.menu button[aria-current="page"]{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surf);padding:10px 16px;border-radius:999px;font-size:.85rem;z-index:50;max-width:90vw;text-align:center}
 </style>
 </head>
 <body>
@@ -214,8 +256,47 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
   <div class="sub">Bagejournal</div>
 </div>
 
-<!-- HOME -->
-<section id="v-home">
+<!-- AUTH -->
+<section id="v-auth" hidden>
+  <div class="auth">
+    <div class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><rect x="17" y="17" width="72" height="72" rx="10" fill="#2A211A"/><rect x="13" y="13" width="72" height="72" rx="10" fill="#FFFFFF"/><path d="M23 64 C23 43 34 35 49 35 C64 35 75 43 75 64 Z" fill="#B9773A" stroke="#2A211A" stroke-width="3" stroke-linejoin="round"/><path d="M20 64 H78" stroke="#2A211A" stroke-width="3" stroke-linecap="round"/><path d="M34 57 l7 -11 M45 57 l7 -11 M56 57 l7 -11" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/></svg>
+      <h1>Surdejsloggen</h1>
+      <p class="muted" style="margin:0">Log dine bagninger og følg dine venners.</p>
+    </div>
+    <div class="authcard">
+      <div class="seg" role="group" aria-label="Log ind eller opret konto">
+        <button type="button" data-auth="in" aria-pressed="true">Log ind</button>
+        <button type="button" data-auth="up" aria-pressed="false">Opret konto</button>
+      </div>
+      <form id="authForm" novalidate>
+        <label class="f" for="a-user" data-up hidden>Brugernavn <span class="u">3–24 tegn: a–z, 0–9, . og _</span><input type="text" id="a-user" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="fx kasper.bager"></label>
+        <label class="f" for="a-name" data-up hidden>Dit navn<input type="text" id="a-name" autocomplete="name" placeholder="fx Kasper"></label>
+        <label class="f" for="a-email">E-mail<input type="email" id="a-email" autocomplete="email" autocapitalize="none" inputmode="email"></label>
+        <label class="f" for="a-pass">Adgangskode <span class="u" data-up hidden>mindst 6 tegn</span><input type="password" id="a-pass" autocomplete="current-password"></label>
+        <p class="err" id="authErr" hidden></p>
+        <p class="ok" id="authOk" hidden></p>
+        <button class="btn primary" type="submit" id="authBtn">Log ind</button>
+        <button class="linkbtn" type="button" id="forgotBtn" style="align-self:center">Glemt adgangskode?</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FEED -->
+<section id="v-feed" hidden>
+  <div class="phead"><h1>Feed</h1><button class="smallbtn" type="button" id="refreshBtn">Opdatér</button></div>
+  <div id="migrateBox"></div>
+  <div class="feed" id="feedList"></div>
+  <div class="empty" id="feedEmpty" hidden>
+    <h2>Stille i bageriet</h2>
+    <p>Her ser du dine og dine venners bagninger, nyeste først. Find venner under <b>Venner</b>, eller log din første bagning.</p>
+    <button class="btn primary" type="button" data-new>+ Ny bagning</button>
+  </div>
+</section>
+
+<!-- HOME (my recipes) -->
+<section id="v-home" hidden>
   <div class="top">
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
@@ -240,23 +321,35 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
   <div class="sortlbl" id="sortLbl" hidden></div>
   <div class="grid" id="grid"></div>
   <div class="empty" id="homeEmpty" hidden>
-    <h2>Ingen bagninger endnu</h2>
-    <p>Log din første bagning med mel, vand, surdej, tider og billeder. Bagninger med samme navn samles som én opskrift her.</p>
+    <h2>Ingen opskrifter endnu</h2>
+    <p>Log din første bagning. Bagninger med samme navn samles som én opskrift her.</p>
     <button class="btn primary" type="button" data-new>+ Ny bagning</button>
   </div>
 </section>
 
-<!-- RECIPE -->
 <section id="v-recipe" hidden></section>
-
-<!-- BAKE -->
 <section id="v-bake" hidden></section>
 
-<!-- LOG -->
-<section id="v-log" hidden>
-  <div class="phead"><h1>Logbog</h1><button class="smallbtn" type="button" id="backupBtn">Backup</button></div>
-  <div class="wrap rows" id="logRows"></div>
-  <div class="empty" id="logEmpty" hidden><h2>Tom logbog</h2><p>Alle dine bagninger vises her, nyeste først.</p></div>
+<!-- FRIENDS -->
+<section id="v-friends" hidden>
+  <div class="phead"><h1>Venner</h1><button class="smallbtn" type="button" id="logoutBtn">Log ud</button></div>
+  <div class="section">
+    <div class="me"><span class="av" id="meAv"></span><div><b id="meName"></b><div class="meta" id="meUser"></div></div></div>
+  </div>
+  <div class="section">
+    <h2>Find venner</h2>
+    <input type="search" class="plain" id="userSearch" placeholder="Søg på brugernavn" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Søg på brugernavn">
+    <div class="rows" id="searchRows"></div>
+  </div>
+  <div class="section" id="incomingSec" hidden><h2>Venneanmodninger</h2><div class="rows" id="incomingRows"></div></div>
+  <div class="section"><h2>Dine venner</h2><div class="rows" id="friendRows"></div><p class="muted" id="noFriends" style="margin:0" hidden>Du har ingen venner endnu. Søg på din vens brugernavn ovenfor.</p></div>
+  <div class="section" id="outgoingSec" hidden><h2>Sendte anmodninger</h2><div class="rows" id="outgoingRows"></div></div>
+  <div class="section">
+    <h2>Skift adgangskode</h2>
+    <label class="f" for="newPass">Ny adgangskode <span class="u">mindst 6 tegn</span><input type="password" id="newPass" autocomplete="new-password"></label>
+    <button class="btn" type="button" id="newPassBtn">Gem ny adgangskode</button>
+    <p id="newPassMsg" aria-live="polite" hidden></p>
+  </div>
 </section>
 
 <!-- FORM -->
@@ -276,7 +369,6 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
       <label class="f" for="f-name">Opskriftens navn <span class="u">Samme navn samler bagningerne under én opskrift</span><input type="text" id="f-name" list="recipes" placeholder="fx Landbrød, Speltboller" autocomplete="off"></label>
       <datalist id="recipes"></datalist>
     </fieldset>
-
     <fieldset>
       <legend>Billeder &amp; tekst</legend>
       <div class="thumbs" id="thumbs"></div>
@@ -285,16 +377,14 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
         <span id="photoLblTxt">Tilføj billeder</span>
         <input type="file" id="f-photo" accept="image/*" multiple class="vh">
       </label>
-      <label class="f" for="f-caption">Tekst <span class="u">(valgfri)</span><textarea id="f-caption" placeholder="Fx: Første forsøg med rug – flot ovnspring!"></textarea></label>
+      <label class="f" for="f-caption">Tekst <span class="u">(valgfri – vises for dine venner)</span><textarea id="f-caption" placeholder="Fx: Første forsøg med rug – flot ovnspring!"></textarea></label>
     </fieldset>
-
     <fieldset>
       <legend>Mel</legend>
       <div id="flours" style="display:flex;flex-direction:column;gap:8px"></div>
       <datalist id="flourTypes"></datalist>
       <button type="button" class="linkbtn" id="addFlour" style="align-self:flex-start">+ Tilføj mere mel</button>
     </fieldset>
-
     <fieldset>
       <legend>Vand, surdej &amp; salt</legend>
       <div class="g3">
@@ -309,7 +399,6 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
         <div><small>Dej i alt</small><strong id="c-dough">–</strong></div>
       </div>
     </fieldset>
-
     <fieldset>
       <legend>Tider &amp; ovn</legend>
       <div class="g3">
@@ -326,7 +415,6 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
         </div>
       </div>
     </fieldset>
-
     <fieldset>
       <legend>Hvordan blev det?</legend>
       <div class="raterow"><span>Samlet</span><div class="rate" data-r="overall"></div></div>
@@ -336,21 +424,9 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
       <div class="raterow"><span>Smag</span><div class="rate small" data-r="taste"></div></div>
       <label class="f" for="f-notes">Noter til næste gang<textarea id="f-notes" placeholder="Hvad vil du ændre næste gang?"></textarea></label>
     </fieldset>
-
     <p class="err" id="formErr" hidden></p>
     <button type="submit" class="btn primary" id="saveBtn">Gem bagning</button>
   </form>
-</section>
-
-<!-- BACKUP -->
-<section id="v-backup" hidden>
-  <div class="phead"><h1>Backup</h1><button class="smallbtn" type="button" id="backupBack">Luk</button></div>
-  <div class="card">
-    <p>Dine bagninger og billeder ligger kun på denne telefon. Gem en backup en gang imellem, fx i Filer eller iCloud Drive, så du ikke mister dem, hvis du sletter appen eller skifter telefon.</p>
-    <button class="btn primary" id="exportBtn" type="button">Gem backup</button>
-    <label class="photobtn" for="importFile">Indlæs backup fra fil<input type="file" id="importFile" accept="application/json,.json" class="vh"></label>
-    <p id="backupMsg" aria-live="polite"></p>
-  </div>
 </section>
 
 <!-- INSTALL -->
@@ -362,24 +438,30 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
       <li><span>Åbn denne side i <b>Safari</b>.</span></li>
       <li><span>Tryk på <b>Del</b>-knappen <svg class="share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Del-ikonet"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg> nederst på skærmen.</span></li>
       <li><span>Vælg <b>Føj til hjemmeskærm</b>, og tryk <b>Tilføj</b>.</span></li>
-      <li><span>Åbn <b>Surdej</b> fra hjemmeskærmen. Den virker også uden internet.</span></li>
+      <li><span>Åbn <b>Surdej</b> fra hjemmeskærmen og log ind.</span></li>
     </ol>
-    <p class="note">Dine bagninger og billeder gemmes kun på telefonen, inde i appen. Installér den derfor, før du begynder at logge. Bruger du Android, så vælg <b>Installér app</b> i Chromes menu.</p>
+    <p class="note">Bruger du Android, så vælg <b>Installér app</b> i Chromes menu.</p>
     <button class="btn" id="skipInstall" type="button">Brug den i browseren i stedet</button>
   </div>
 </section>
 
-<nav class="menu" aria-label="Menu" id="menu">
+<nav class="menu" aria-label="Menu" id="menu" hidden>
   <div class="in">
-    <button type="button" data-nav="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>Udforsk</button>
+    <button type="button" data-nav="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6h-6v6H4z"/></svg>Feed</button>
+    <button type="button" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 15c0-4.5 4-8 9-8s9 3.5 9 8v3H3z"/><path d="M8 11l1.5 2M12 10l1 2.3M16 11l1 2"/></svg>Opskrifter</button>
     <button type="button" data-nav="form"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></svg>Ny bagning</button>
-    <button type="button" data-nav="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Logbog</button>
+    <button type="button" data-nav="friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.5"/><path d="M15.5 13.2c3 .2 5.5 2.6 5.5 5.8"/></svg>Venner<span class="badge" id="reqBadge" hidden></span></button>
   </div>
 </nav>
 
+<script src="vendor/supabase.js"></script>
 <script>
 (function(){
 "use strict";
+const SUPABASE_URL = "https://jldsmespfucvflzaligf.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vAW1RZt9yUyQlEqdUuA1XQ_ksLpSd3P";
+const DEMO = location.hash === "#demo";
+
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const FLOURS = ["Hvedemel","Manitobamel","Fuldkornshvedemel","Spelt","Fuldkornsspelt","Rugmel","Fuldkornsrugmel","Emmer","Enkorn","Ølandshvede","Durum / semolina"];
@@ -387,50 +469,8 @@ const LOAF = '<svg viewBox="0 0 100 70" aria-hidden="true"><path d="M10 56 C10 3
 const noimg = () => `<div class="noimg">${LOAF}</div>`;
 
 /* ---------- splash ---------- */
-const splash = $("#splash");
-const splashStart = Date.now();
-function hideSplash(){
-  const wait = Math.max(0, 1300 - (Date.now() - splashStart));
-  setTimeout(()=>{ splash.classList.add("out"); setTimeout(()=>splash.remove(), 500); }, wait);
-}
-
-/* ---------- storage: IndexedDB on the device ---------- */
-let bakes = [];
-let idb = null;
-function openDB(){
-  return new Promise((res,rej)=>{
-    const r = indexedDB.open("surdejsloggen", 1);
-    r.onupgradeneeded = () => {
-      const d = r.result;
-      if(!d.objectStoreNames.contains("bakes")) d.createObjectStore("bakes",{keyPath:"id"});
-      if(!d.objectStoreNames.contains("photos")) d.createObjectStore("photos");
-    };
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
-}
-function tx(name, mode, fn){
-  return new Promise((res,rej)=>{
-    const t = idb.transaction(name, mode);
-    let out; const r = fn(t.objectStore(name));
-    if(r) r.onsuccess = () => { out = r.result; };
-    t.oncomplete = () => res(out);
-    t.onerror = () => rej(t.error);
-    t.onabort = () => rej(t.error);
-  });
-}
-const store = {
-  async save(b){ await tx("bakes","readwrite",s=>s.put(b)); const i=bakes.findIndex(x=>x.id===b.id); if(i>=0) bakes[i]=b; else bakes.push(b); },
-  async remove(id){ await tx("bakes","readwrite",s=>s.delete(id)); bakes = bakes.filter(x=>x.id!==id); }
-};
-const photos = {
-  put:(id,blob)=>tx("photos","readwrite",s=>s.put(blob,id)),
-  get:id=>tx("photos","readonly",s=>s.get(id)),
-  del:id=>tx("photos","readwrite",s=>s.delete(id))
-};
-const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
-const lsSet = (k,v) => { try{ localStorage.setItem(k,v); }catch(e){} };
-const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+const splash = $("#splash"), splashStart = Date.now();
+function hideSplash(){ const w = Math.max(0, 1300-(Date.now()-splashStart)); setTimeout(()=>{ splash.classList.add("out"); setTimeout(()=>splash.remove(),500); }, w); }
 
 /* ---------- helpers ---------- */
 const n = v => { const x=parseFloat(v); return isFinite(x)?x:0; };
@@ -438,11 +478,8 @@ function calc(b){
   const flourG = (b.flours||[]).reduce((s,f)=>s+n(f.g),0);
   const st = n(b.starter), stFlour = st/2, stWater = st/2;   // surdej regnes som 100 % hydrering
   const totFlour = flourG + stFlour, totWater = n(b.water) + stWater;
-  return { flourG,
-    hyd: totFlour ? totWater/totFlour*100 : null,
-    ino: flourG ? st/flourG*100 : null,
-    salt: totFlour ? n(b.salt)/totFlour*100 : null,
-    dough: flourG + n(b.water) + st + n(b.salt) };
+  return { flourG, hyd: totFlour ? totWater/totFlour*100 : null, ino: flourG ? st/flourG*100 : null,
+    salt: totFlour ? n(b.salt)/totFlour*100 : null, dough: flourG + n(b.water) + st + n(b.salt) };
 }
 const pct = v => v===null||!isFinite(v) ? "–" : v.toFixed(v<10?1:0).replace(".",",")+" %";
 const fmt = v => (v===null||v===undefined||v==="") ? "–" : String(v).replace(".",",");
@@ -457,10 +494,251 @@ const kindName = k => k==="buns" ? "Boller" : "Brød";
 const ovenLabel = m => m==="varmluft"?"Varmluft":m==="overunder"?"Over-/undervarme":"";
 const picsOf = b => Array.isArray(b.pics) ? b.pics : (b.photo ? [b.photo] : []);
 const keyOf = name => (name||"").trim().toLowerCase() || "\u0000uden";
+const flourText = b => (b.flours||[]).filter(f=>n(f.g)>0).map(f=>`${fmt(f.g)} g ${f.type||"mel"}`).join(" · ");
+const initials = p => ((p && (p.display_name||p.username)) || "?").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2);
+const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+const lsSet = (k,v) => { try{ localStorage.setItem(k,v); }catch(e){} };
+const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+let toastT; function toast(msg){ let t=$(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); document.body.appendChild(t); } t.textContent=msg; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),2600); }
 
+/* ---------- backend ---------- */
+const DATA_KEYS = ["flours","water","salt","starter","extras","bulk","cold","proof","temp","time","ovenMode","rise","crumb","crust","taste","notes","created"];
+const toRow = b => { const data={}; DATA_KEYS.forEach(k=>{ if(b[k]!==undefined) data[k]=b[k]; });
+  return { id:b.id, user_id:b.user_id, date:b.date, name:b.name||"", kind:b.kind||"bread", overall:n(b.overall)|0, caption:b.caption||"", pics:picsOf(b), data, updated_at:new Date().toISOString() }; };
+const fromRow = r => ({ ...(r.data||{}), id:r.id, user_id:r.user_id, date:r.date, name:r.name, kind:r.kind, overall:r.overall, caption:r.caption, pics:r.pics||[], created:(r.data&&r.data.created)||Date.parse(r.created_at)||0 });
+
+function realApi(){
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+  const urlCache = new Map();
+  const fail = e => { if(e) throw e; };
+  return {
+    onAuth: cb => sb.auth.onAuthStateChange((ev, s)=>cb(ev, s)),
+    async session(){ const { data } = await sb.auth.getSession(); return data.session; },
+    async signUp({email,password,username,display_name}){
+      const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ username, display_name }, emailRedirectTo: location.origin + location.pathname } });
+      fail(error); return data;
+    },
+    async signIn(email,password){ const { data, error } = await sb.auth.signInWithPassword({ email, password }); fail(error); return data; },
+    async reset(email){ const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); fail(error); },
+    async signOut(){ await sb.auth.signOut(); urlCache.clear(); },
+    async updatePassword(password){ const { error } = await sb.auth.updateUser({ password }); fail(error); },
+    async usernameAvailable(name){ const { data, error } = await sb.rpc("username_available", { name }); fail(error); return !!data; },
+    async profile(id){ const { data, error } = await sb.from("profiles").select("id,username,display_name").eq("id", id).maybeSingle(); fail(error); return data; },
+    async profiles(ids){ if(!ids.length) return []; const { data, error } = await sb.from("profiles").select("id,username,display_name").in("id", ids); fail(error); return data||[]; },
+    async bakes(){ const { data, error } = await sb.from("bakes").select("*").order("date",{ascending:false}).order("created_at",{ascending:false}).limit(500); fail(error); return (data||[]).map(fromRow); },
+    async saveBake(b){ const { error } = await sb.from("bakes").upsert(toRow(b)); fail(error); },
+    async deleteBake(b){ const { error } = await sb.from("bakes").delete().eq("id", b.id); fail(error); const ps = picsOf(b); if(ps.length) await sb.storage.from("photos").remove(ps); },
+    async uploadPhoto(path, blob){ const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: blob.type || "image/jpeg", upsert:false }); fail(error); },
+    async removePhotos(paths){ if(paths.length) await sb.storage.from("photos").remove(paths); },
+    async photoUrls(paths){
+      const need = paths.filter(p=>!urlCache.has(p));
+      if(need.length){ const { data, error } = await sb.storage.from("photos").createSignedUrls(need, 60*60*6); fail(error); (data||[]).forEach(d=>{ if(d.signedUrl) urlCache.set(d.path, d.signedUrl); }); }
+      const out = {}; paths.forEach(p=>{ if(urlCache.has(p)) out[p]=urlCache.get(p); }); return out;
+    },
+    async searchUsers(q, myId){ const { data, error } = await sb.from("profiles").select("id,username,display_name").ilike("username", q.replace(/[%_]/g,"")+"%").neq("id", myId).order("username").limit(15); fail(error); return data||[]; },
+    async friendships(){ const { data, error } = await sb.from("friendships").select("*"); fail(error); return data||[]; },
+    async request(myId, otherId){ const { error } = await sb.from("friendships").insert({ requester:myId, addressee:otherId }); fail(error); },
+    async accept(id){ const { error } = await sb.from("friendships").update({ status:"accepted" }).eq("id", id); fail(error); },
+    async removeFriendship(id){ const { error } = await sb.from("friendships").delete().eq("id", id); fail(error); }
+  };
+}
+
+function demoApi(){
+  const me = { id:"u1", username:"kasper", display_name:"Kasper" };
+  const people = [me, {id:"u2",username:"mette.bager",display_name:"Mette Holm"}, {id:"u3",username:"jonas_rug",display_name:"Jonas"}, {id:"u4",username:"sofie",display_name:"Sofie Lund"}, {id:"u5",username:"sofus",display_name:"Sofus"}];
+  const pic = (c1,c2) => { const cv=document.createElement("canvas"); cv.width=800; cv.height=600; const x=cv.getContext("2d"); x.fillStyle="#E7DCCB"; x.fillRect(0,0,800,600); x.fillStyle=c2; x.beginPath(); x.ellipse(400,320,300,200,0,0,7); x.fill(); x.fillStyle=c1; x.beginPath(); x.ellipse(400,310,280,180,0,0,7); x.fill(); x.strokeStyle="#F4EDE1"; x.lineWidth=18; x.lineCap="round"; for(let i=0;i<3;i++){ x.beginPath(); x.moveTo(280+i*110,380); x.lineTo(350+i*110,230); x.stroke(); } return cv.toDataURL("image/jpeg",.8); };
+  const imgs = { "d/1":pic("#C98A4B","#7A4A20"), "d/2":pic("#B9773A","#6B3E18"), "d/3":pic("#D9A86A","#8E5A2C"), "d/4":pic("#A86A33","#5A3414") };
+  let friends = [{id:1,requester:"u1",addressee:"u2",status:"accepted"},{id:2,requester:"u3",addressee:"u1",status:"accepted"},{id:3,requester:"u4",addressee:"u1",status:"pending"}], fid=10;
+  let rows = [
+    {id:"x1",user_id:"u2",date:"2026-10-12",name:"Rugbrød med solsikke",kind:"bread",overall:5,caption:"Endelig et rugbrød der ikke er klægt i midten! 18 timer i køleskabet gjorde forskellen.",pics:["d/4","d/2"],data:{flours:[{type:"Fuldkornsrugmel",g:600},{type:"Rugmel",g:200}],water:700,starter:150,salt:16,time:75,temp:180,ovenMode:"overunder",created:5}},
+    {id:"x2",user_id:"u3",date:"2026-10-11",name:"Speltboller",kind:"buns",overall:4,caption:"Søndagsboller til hele familien.",pics:["d/3"],data:{flours:[{type:"Spelt",g:500}],water:330,starter:100,salt:10,time:18,temp:220,ovenMode:"varmluft",created:4}},
+    {id:"x3",user_id:"u1",date:"2026-10-10",name:"Landbrød",kind:"bread",overall:4,caption:"Sprød skorpe og pæn åben krumme.",pics:["d/1"],data:{flours:[{type:"Hvedemel",g:400},{type:"Fuldkornshvedemel",g:100}],water:350,starter:100,salt:10,time:45,temp:250,ovenMode:"overunder",created:3}},
+    {id:"x4",user_id:"u1",date:"2026-10-03",name:"Speltboller",kind:"buns",overall:5,caption:"",pics:["d/3"],data:{flours:[{type:"Spelt",g:300},{type:"Hvedemel",g:200}],water:300,starter:75,salt:10,time:18,temp:220,created:2}}
+  ];
+  let session = lsGet("demoIn") ? { user:{ id:"u1" } } : null; let cb = ()=>{};
+  return {
+    onAuth: f => { cb=f; },
+    async session(){ return session; },
+    async signUp(){ session={user:{id:"u1"}}; lsSet("demoIn","1"); cb("SIGNED_IN",session); return {session}; },
+    async signIn(){ session={user:{id:"u1"}}; lsSet("demoIn","1"); cb("SIGNED_IN",session); return {session}; },
+    async reset(){}, async updatePassword(){}, async signOut(){ session=null; try{localStorage.removeItem("demoIn");}catch(e){} cb("SIGNED_OUT",null); },
+    async usernameAvailable(nm){ return !people.some(p=>p.username===nm); },
+    async profile(id){ return people.find(p=>p.id===id)||null; },
+    async profiles(ids){ return people.filter(p=>ids.includes(p.id)); },
+    async bakes(){ const vis = id => id==="u1" || friends.some(f=>f.status==="accepted"&&((f.requester==="u1"&&f.addressee===id)||(f.addressee==="u1"&&f.requester===id))); return rows.filter(r=>vis(r.user_id)).map(fromRow).sort(byNewest); },
+    async saveBake(b){ const r=toRow(b); r.user_id="u1"; rows=rows.filter(x=>x.id!==r.id); rows.push(r); },
+    async deleteBake(b){ rows=rows.filter(x=>x.id!==b.id); },
+    async uploadPhoto(path, blob){ imgs[path]=URL.createObjectURL(blob); },
+    async removePhotos(){},
+    async photoUrls(paths){ const o={}; paths.forEach(p=>{ if(imgs[p]) o[p]=imgs[p]; }); return o; },
+    async searchUsers(q){ return people.filter(p=>p.id!=="u1" && p.username.startsWith(q)); },
+    async friendships(){ return friends.slice(); },
+    async request(a,b){ friends.push({id:fid++,requester:a,addressee:b,status:"pending"}); },
+    async accept(id){ friends.find(f=>f.id===id).status="accepted"; },
+    async removeFriendship(id){ friends=friends.filter(f=>f.id!==id); }
+  };
+}
+const api = DEMO ? demoApi() : realApi();
+
+/* ---------- state ---------- */
+let me = null;            // {id, username, display_name}
+let bakes = [];           // all visible (mine + friends)
+let people = new Map();   // id -> profile
+let friendships = [];
+const mine = () => bakes.filter(b=>b.user_id===me.id);
+const personOf = id => people.get(id) || {id, username:"?", display_name:""};
+const nameOf = p => p.display_name || p.username;
+
+async function loadAll(){
+  const [bs, fs] = await Promise.all([api.bakes(), api.friendships()]);
+  bakes = bs; friendships = fs;
+  const ids = [...new Set([me.id, ...bs.map(b=>b.user_id), ...fs.flatMap(f=>[f.requester,f.addressee])])].filter(id=>!people.has(id));
+  (await api.profiles(ids)).forEach(p=>people.set(p.id,p));
+  updateBadge();
+}
+function updateBadge(){ const k = friendships.filter(f=>f.status==="pending" && f.addressee===me.id).length; const b=$("#reqBadge"); b.hidden=!k; b.textContent=k; }
+
+/* ---------- photos ---------- */
+const img = (id, alt) => `<img data-photo="${esc(id)}" alt="${esc(alt)}">`;
+async function hydrate(root){
+  const els = Array.from(root.querySelectorAll("img[data-photo]")); if(!els.length) return;
+  let urls = {};
+  try{ urls = await api.photoUrls([...new Set(els.map(e=>e.dataset.photo))]); }catch(e){}
+  els.forEach(el=>{ const u = urls[el.dataset.photo]; if(u){ el.src = u; el.addEventListener("error",()=>{ el.outerHTML = noimg(); },{once:true}); } else el.outerHTML = noimg(); });
+}
+function wireGallery(root){
+  root.querySelectorAll("[data-gal]").forEach(w=>{
+    const g = w.querySelector(".gallery"), c = w.querySelector(".count"); if(!g||!c) return;
+    const total = g.children.length;
+    g.addEventListener("scroll",()=>{ const i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth)); c.textContent=(Math.min(i,total-1)+1)+" / "+total; },{passive:true});
+  });
+}
+
+/* ---------- navigation ---------- */
+const VIEWS = ["auth","feed","home","recipe","bake","friends","form","install"];
+let current = "feed", curRecipe = null, curBake = null, backTo = "feed";
+function show(v){
+  current = v;
+  VIEWS.forEach(x=>{ $("#v-"+x).hidden = x!==v; });
+  const navKey = (v==="recipe"||v==="bake") ? backTo : v;
+  $$("nav.menu button").forEach(b=>{ if(b.dataset.nav===navKey) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
+  $("#menu").hidden = ["auth","install","recipe","bake"].includes(v) || !me;
+  window.scrollTo(0,0);
+}
+$$("nav.menu button").forEach(b=>b.onclick=()=>{
+  const v=b.dataset.nav;
+  if(v==="form") openForm(null); else { backTo=v; show(v); render(); }
+});
+document.addEventListener("click", e=>{ if(e.target.closest("[data-new]")) openForm(null); });
+function render(){
+  if(current==="feed") renderFeed();
+  if(current==="home") renderHome();
+  if(current==="friends") renderFriends();
+}
+
+/* ---------- auth ---------- */
+let authMode = "in";
+$$("[data-auth]").forEach(b=>b.onclick=()=>{
+  authMode = b.dataset.auth;
+  $$("[data-auth]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  $$("[data-up]").forEach(x=>x.hidden = authMode!=="up");
+  $("#authBtn").textContent = authMode==="up" ? "Opret konto" : "Log ind";
+  $("#forgotBtn").hidden = authMode==="up";
+  $("#a-pass").autocomplete = authMode==="up" ? "new-password" : "current-password";
+  $("#authErr").hidden = $("#authOk").hidden = true;
+});
+const authErrText = e => {
+  const m = (e && (e.message||e.error_description||"")).toLowerCase();
+  if(m.includes("invalid login")) return "Forkert e-mail eller adgangskode.";
+  if(m.includes("email not confirmed")) return "Du skal bekræfte din e-mail først. Tjek din indbakke.";
+  if(m.includes("already registered")) return "Der findes allerede en konto med den e-mail. Log ind i stedet.";
+  if(m.includes("password")) return "Adgangskoden skal være på mindst 6 tegn.";
+  if(m.includes("rate limit")) return "For mange forsøg. Vent et par minutter og prøv igen.";
+  if(m.includes("fetch") || m.includes("network")) return "Ingen forbindelse. Tjek dit internet og prøv igen.";
+  return "Det gik ikke: " + (e && e.message ? e.message : "ukendt fejl") + ".";
+};
+$("#authForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const err=$("#authErr"), ok=$("#authOk"), btn=$("#authBtn"); err.hidden=ok.hidden=true;
+  const email=$("#a-email").value.trim(), pass=$("#a-pass").value;
+  if(!email || !pass){ err.textContent="Skriv din e-mail og adgangskode."; err.hidden=false; return; }
+  btn.disabled=true;
+  try{
+    if(authMode==="up"){
+      const username=$("#a-user").value.trim().toLowerCase(), name=$("#a-name").value.trim();
+      if(!/^[a-z0-9_.]{3,24}$/.test(username)){ throw {message:"Brugernavnet skal være 3–24 tegn og må kun indeholde a–z, 0–9, punktum og bundstreg.", own:true}; }
+      if(pass.length<6) throw {message:"Adgangskoden skal være på mindst 6 tegn.", own:true};
+      if(!(await api.usernameAvailable(username))) throw {message:`Brugernavnet “${username}” er taget. Prøv et andet.`, own:true};
+      const r = await api.signUp({email, password:pass, username, display_name:name});
+      if(!r.session){ ok.textContent="Næsten færdig! Vi har sendt en e-mail til "+email+". Tryk på linket i den, og log så ind her."; ok.hidden=false; $$("[data-auth]")[0].click(); ok.hidden=false; }
+    } else {
+      await api.signIn(email, pass);
+    }
+  }catch(ex){ err.textContent = ex && ex.own ? ex.message : authErrText(ex); err.hidden=false; }
+  finally{ btn.disabled=false; }
+});
+$("#forgotBtn").onclick = async ()=>{
+  const email=$("#a-email").value.trim(), err=$("#authErr"), ok=$("#authOk"); err.hidden=ok.hidden=true;
+  if(!email){ err.textContent="Skriv din e-mail først, så sender vi et link."; err.hidden=false; return; }
+  try{ await api.reset(email); ok.textContent="Vi har sendt et link til at nulstille din adgangskode."; ok.hidden=false; }catch(ex){ err.textContent=authErrText(ex); err.hidden=false; }
+};
+$("#logoutBtn").onclick = async ()=>{ await api.signOut(); };
+$("#newPassBtn").onclick = async ()=>{
+  const pw=$("#newPass").value, msg=$("#newPassMsg"); msg.hidden=false;
+  if(pw.length<6){ msg.className="err"; msg.textContent="Adgangskoden skal være på mindst 6 tegn."; return; }
+  try{ await api.updatePassword(pw); $("#newPass").value=""; msg.className="ok"; msg.textContent="Din adgangskode er ændret."; }
+  catch(e){ msg.className="err"; msg.textContent=authErrText(e); }
+};
+
+let entering = false;
+async function enter(session){
+  if(entering || (me && me.id===session.user.id)) return;
+  entering = true;
+  try{
+    let p = await api.profile(session.user.id);
+    if(!p){ await new Promise(r=>setTimeout(r,800)); p = await api.profile(session.user.id); }
+    me = p || { id:session.user.id, username:"", display_name:"" };
+    people.set(me.id, me);
+    await loadAll();
+  }catch(e){ toast("Kunne ikke hente data. Tjek din forbindelse."); }
+  entering = false;
+  backTo="feed"; show("feed"); renderFeed(); checkMigration();
+}
+function leave(){ me=null; bakes=[]; friendships=[]; people=new Map(); show("auth"); }
+
+/* ---------- feed ---------- */
+$("#refreshBtn").onclick = async ()=>{ const b=$("#refreshBtn"); b.disabled=true; try{ await loadAll(); renderFeed(); }catch(e){ toast("Ingen forbindelse."); } b.disabled=false; };
+function galleryHtml(ps, alt){
+  if(!ps.length) return "";
+  return `<div class="pgal" data-gal><div class="gallery">${ps.map((p,i)=>img(p,`Billede ${i+1} af ${alt}`)).join("")}</div>${ps.length>1?`<span class="count">1 / ${ps.length}</span>`:""}</div>`;
+}
+function renderFeed(){
+  const list = bakes.slice().sort(byNewest).slice(0,150);
+  $("#feedEmpty").hidden = list.length>0;
+  const box = $("#feedList");
+  box.innerHTML = list.map(b=>{
+    const p = personOf(b.user_id), c = calc(b);
+    const tick = [kindName(b.kind), Math.round(c.flourG)+" g mel", b.time?b.time+" min":"", ovenLabel(b.ovenMode)].filter(Boolean);
+    return `<article class="post">
+      <div class="who"><span class="av" aria-hidden="true">${esc(initials(p))}</span><span class="nm"><b>${esc(b.user_id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)} · ${esc(shortDate(b.date))}</small></span>
+        ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
+      ${galleryHtml(picsOf(b), b.name||"bagningen")}
+      <button class="pbody" type="button" data-bake="${esc(b.id)}"><span class="ptitle">${esc(b.name||"Uden navn")}</span>${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}<span class="ticket">${tick.map(t=>`<span>${esc(t)}</span>`).join("")}</span></button>
+    </article>`;
+  }).join("");
+  hydrate(box); wireGallery(box);
+  box.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>{ backTo="feed"; openBake(x.dataset.bake); });
+}
+
+/* ---------- my recipes ---------- */
+let filter = "all", query = "";
+$$(".tab[data-f]").forEach(b=>b.onclick=()=>{ filter=b.dataset.f; $$(".tab[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderHome(); });
+$("#q").addEventListener("input", e=>{ query=e.target.value.trim().toLowerCase(); renderHome(); });
+$("#sortSel").addEventListener("change", ()=>{ const s=$("#sortSel"); $("#sortLbl").textContent="Sorteret: "+s.options[s.selectedIndex].text; $("#sortLbl").hidden = s.value==="new"; renderHome(); });
 function recipes(){
   const m = new Map();
-  for(const b of bakes.slice().sort(byNewest)){
+  for(const b of mine().sort(byNewest)){
     const k = keyOf(b.name);
     if(!m.has(k)) m.set(k, {key:k, name:b.name||"Uden navn", kind:b.kind, bakes:[]});
     m.get(k).bakes.push(b);
@@ -469,87 +747,38 @@ function recipes(){
     const rated = r.bakes.filter(b=>n(b.overall)>0);
     r.avg = rated.length ? rated.reduce((s,b)=>s+n(b.overall),0)/rated.length : 0;
     r.bestBake = rated.slice().sort((a,b)=>n(b.overall)-n(a.overall)||byNewest(a,b))[0] || r.bakes[0];
-    r.best = n(r.bestBake.overall);
-    r.latest = r.bakes[0].date;
+    r.best = n(r.bestBake.overall); r.latest = r.bakes[0].date;
     const withPic = [r.bestBake, ...r.bakes].find(b=>picsOf(b).length);
-    r.cover = withPic ? picsOf(withPic)[0] : null;
-    r.allPics = r.bakes.flatMap(picsOf);
+    r.cover = withPic ? picsOf(withPic)[0] : null; r.allPics = r.bakes.flatMap(picsOf);
     return r;
   });
 }
-
-/* ---------- photos ---------- */
-const photoUrls = new Map();
-async function photoUrl(id){
-  if(photoUrls.has(id)) return photoUrls.get(id);
-  const blob = await photos.get(id);
-  if(!blob) return null;
-  const u = URL.createObjectURL(blob); photoUrls.set(id,u); return u;
-}
-const img = (id, alt, cls="") => `<img data-photo="${esc(id)}" alt="${esc(alt)}" class="${cls}">`;
-function hydrate(root){
-  root.querySelectorAll("img[data-photo]").forEach(async el=>{
-    try{ const u = await photoUrl(el.dataset.photo); if(u) el.src = u; else el.outerHTML = noimg(); }catch(e){ el.outerHTML = noimg(); }
-  });
-}
-
-/* ---------- navigation ---------- */
-const VIEWS = ["home","recipe","bake","log","form","backup","install"];
-let current = "home", curRecipe = null, curBake = null, backTo = "home";
-function show(v){
-  current = v;
-  VIEWS.forEach(x=>{ $("#v-"+x).hidden = x!==v; });
-  const navKey = v==="recipe"||v==="bake" ? (backTo==="log"?"log":"home") : v;
-  $$("nav.menu button").forEach(b=>{ if(b.dataset.nav===navKey) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
-  $("#menu").hidden = v==="install" || v==="recipe" || v==="bake";
-  window.scrollTo(0,0);
-}
-$$("nav.menu button").forEach(b=>b.onclick=()=>{
-  const v=b.dataset.nav;
-  if(v==="form") openForm(null); else { backTo=v; show(v); render(); }
-});
-document.addEventListener("click", e=>{ if(e.target.closest("[data-new]")) openForm(null); });
-
-/* ---------- home ---------- */
-let filter = "all", query = "";
-$$(".tab[data-f]").forEach(b=>b.onclick=()=>{ filter=b.dataset.f; $$(".tab[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderHome(); });
-$("#q").addEventListener("input", e=>{ query=e.target.value.trim().toLowerCase(); renderHome(); });
-$("#sortSel").addEventListener("change", ()=>{ const s=$("#sortSel"); $("#sortLbl").textContent="Sorteret: "+s.options[s.selectedIndex].text; $("#sortLbl").hidden = s.value==="new"; renderHome(); });
 function matches(r){
   if(filter==="bread" && r.kind!=="bread") return false;
   if(filter==="buns" && r.kind!=="buns") return false;
   if(filter==="five" && r.best<5) return false;
   if(!query) return true;
-  const hay = [r.name, ...r.bakes.flatMap(b=>[b.caption,b.notes,b.extras,...(b.flours||[]).map(f=>f.type), shortDate(b.date)])].join(" ").toLowerCase();
-  return hay.includes(query);
+  return [r.name, ...r.bakes.flatMap(b=>[b.caption,b.notes,b.extras,...(b.flours||[]).map(f=>f.type), shortDate(b.date)])].join(" ").toLowerCase().includes(query);
 }
 function renderHome(){
-  let list = recipes().filter(matches);
   const s = $("#sortSel").value;
-  const cmp = {
-    new:(a,b)=>(b.latest||"").localeCompare(a.latest||""),
-    best:(a,b)=>b.avg-a.avg||b.best-a.best,
-    worst:(a,b)=>(a.avg||9)-(b.avg||9),
-    count:(a,b)=>b.bakes.length-a.bakes.length,
-    az:(a,b)=>a.name.localeCompare(b.name,"da")
-  }[s];
-  list.sort(cmp);
-  $("#homeEmpty").hidden = bakes.length>0;
+  const cmp = { new:(a,b)=>(b.latest||"").localeCompare(a.latest||""), best:(a,b)=>b.avg-a.avg||b.best-a.best, worst:(a,b)=>(a.avg||9)-(b.avg||9), count:(a,b)=>b.bakes.length-a.bakes.length, az:(a,b)=>a.name.localeCompare(b.name,"da") }[s];
+  const list = recipes().filter(matches).sort(cmp);
+  const has = mine().length>0;
+  $("#homeEmpty").hidden = has;
   const grid = $("#grid");
-  if(!bakes.length){ grid.innerHTML=""; return; }
+  if(!has){ grid.innerHTML=""; return; }
   grid.innerHTML = list.map(r=>`
     <button class="tile" type="button" data-recipe="${esc(r.key)}">
       <span class="pic">${r.cover?img(r.cover,"Billede af "+r.name):noimg()}
         <span class="chip">${r.bakes.length} ${r.bakes.length===1?"bagning":"bagninger"}</span>
         ${r.avg?`<span class="stamp" style="--rot:${rot(r.key)}deg" aria-label="Gennemsnit ${dec(r.avg)} stjerner">${dec(r.avg)}</span>`:""}
       </span>
-      <b>${esc(r.name)}</b>
-      <span class="when">Senest ${esc(shortDate(r.latest))}</span>
-    </button>`).join("") + `
-    <button class="tile add" type="button" data-new><span class="pic">+ Ny bagning</span></button>` +
+      <b>${esc(r.name)}</b><span class="when">Senest ${esc(shortDate(r.latest))}</span>
+    </button>`).join("") + `<button class="tile add" type="button" data-new><span class="pic">+ Ny bagning</span></button>` +
     (list.length ? "" : `<p style="grid-column:1/-1;margin:0;color:var(--muted)">Ingen opskrifter passer til søgningen.</p>`);
   hydrate(grid);
-  grid.querySelectorAll("[data-recipe]").forEach(t=>t.onclick=()=>openRecipe(t.dataset.recipe));
+  grid.querySelectorAll("[data-recipe]").forEach(t=>t.onclick=()=>{ backTo="home"; openRecipe(t.dataset.recipe); });
 }
 
 /* ---------- recipe page ---------- */
@@ -557,61 +786,48 @@ const backSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const editSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
 function openRecipe(key){
   const r = recipes().find(x=>x.key===key);
-  if(!r){ show("home"); renderHome(); return; }
+  if(!r){ show(backTo); render(); return; }
   curRecipe = key;
-  const pics = r.allPics.slice(0,3);
-  const cls = pics.length===1?"one":pics.length===2?"two":"";
-  const times = r.bakes.map(b=>n(b.time)).filter(Boolean);
-  const hyds = r.bakes.map(b=>calc(b).hyd).filter(v=>v!==null);
+  const pics = r.allPics.slice(0,3), cls = pics.length===1?"one":pics.length===2?"two":"";
+  const times = r.bakes.map(b=>n(b.time)).filter(Boolean), hyds = r.bakes.map(b=>calc(b).hyd).filter(v=>v!==null);
   const v = $("#v-recipe");
   v.innerHTML = `
-    <div class="hero">
-      <div class="collage ${cls}">${pics.length?pics.map((p,i)=>img(p,`Billede ${i+1} af ${r.name}`)).join(""):noimg()}</div>
+    <div class="hero"><div class="collage ${cls}">${pics.length?pics.map((p,i)=>img(p,`Billede ${i+1} af ${r.name}`)).join(""):noimg()}</div>
       <button class="circle back" type="button" aria-label="Tilbage">${backSvg}</button>
-      ${r.allPics.length>3?`<span class="count">${r.allPics.length} billeder</span>`:""}
-    </div>
+      ${r.allPics.length>3?`<span class="count">${r.allPics.length} billeder</span>`:""}</div>
     <div class="sheet">
       <div class="titlerow"><div><h1>${esc(r.name)}</h1><div class="meta">${kindName(r.kind)} · bagt ${r.bakes.length} ${r.bakes.length===1?"gang":"gange"}</div></div>
         ${r.avg?`<span class="stamp" style="--rot:${rot(r.key)}deg">${dec(r.avg)}</span>`:""}</div>
-      <div class="stats">
-        <div><b>${r.best?r.best+" ★":"–"}</b><span>bedste</span></div>
-        <div><b>${hyds.length?pct(hyds.reduce((s,x)=>s+x,0)/hyds.length):"–"}</b><span>gns. hydrering</span></div>
-        <div><b>${times.length?times[0]+" min":"–"}</b><span>seneste bagetid</span></div>
-      </div>
+      <div class="stats"><div><b>${r.best?r.best+" ★":"–"}</b><span>bedste</span></div><div><b>${hyds.length?pct(hyds.reduce((s,x)=>s+x,0)/hyds.length):"–"}</b><span>gns. hydrering</span></div><div><b>${times.length?times[0]+" min":"–"}</b><span>seneste bagetid</span></div></div>
       <h2 style="font-size:1.5rem;margin-top:6px">Alle bagninger</h2>
-      <div class="rows">${r.bakes.map(b=>`
-        <button class="row" type="button" data-bake="${esc(b.id)}">
-          <span class="th">${picsOf(b)[0]?img(picsOf(b)[0],""):noimg()}</span>
-          <span class="tx"><b>${esc(shortDate(b.date))}${b.time?" · "+esc(b.time)+" min":""}</b><span>${esc(b.caption||b.notes||flourText(b))}</span></span>
-          ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}
-        </button>`).join("")}</div>
+      <div class="rows">${r.bakes.map(b=>`<button class="row" type="button" data-bake="${esc(b.id)}"><span class="th">${picsOf(b)[0]?img(picsOf(b)[0],""):noimg()}</span><span class="tx"><b>${esc(shortDate(b.date))}${b.time?" · "+esc(b.time)+" min":""}</b><span>${esc(b.caption||b.notes||flourText(b))}</span></span>${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</button>`).join("")}</div>
     </div>
     <div class="bottombar"><span><b>Bag den igen</b>med ${r.best?"den bedste udgave":"seneste udgave"}</span><button class="btn primary" type="button" id="rAgain">Bag igen</button></div>`;
-  v.style.paddingBottom = "90px";
+  v.style.paddingBottom="90px";
   hydrate(v);
   v.querySelector(".back").onclick = ()=>{ show(backTo); render(); };
   v.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>openBake(x.dataset.bake));
   $("#rAgain").onclick = ()=>openForm(r.bestBake, true);
   show("recipe");
 }
-const flourText = b => (b.flours||[]).filter(f=>n(f.g)>0).map(f=>`${fmt(f.g)} g ${f.type||"mel"}`).join(" · ");
 
 /* ---------- bake page ---------- */
 function openBake(id){
-  const b = bakes.find(x=>x.id===id); if(!b){ show("home"); return; }
+  const b = bakes.find(x=>x.id===id); if(!b){ show(backTo); render(); return; }
   curBake = id;
-  const c = calc(b), ps = picsOf(b);
+  const own = b.user_id===me.id, p = personOf(b.user_id), c = calc(b), ps = picsOf(b);
   const sub = [["Hævning",b.rise],["Krumme",b.crumb],["Skorpe",b.crust],["Smag",b.taste]].filter(x=>x[1]);
   const times = [b.bulk?fmt(b.bulk)+" t hævning":"", b.cold?fmt(b.cold)+" t køleskab":"", b.proof?fmt(b.proof)+" t efterhævning":""].filter(Boolean);
   const v = $("#v-bake");
   v.innerHTML = `
-    <div class="hero">
-      ${ps.length?`<div class="gallery">${ps.map((p,i)=>img(p,`Billede ${i+1} af ${b.name||"bagningen"}`)).join("")}</div>`:`<div class="collage one">${noimg()}</div>`}
+    <div class="hero" data-gal>
+      ${ps.length?`<div class="gallery">${ps.map((x,i)=>img(x,`Billede ${i+1} af ${b.name||"bagningen"}`)).join("")}</div>`:`<div class="collage one">${noimg()}</div>`}
       <button class="circle back" type="button" aria-label="Tilbage">${backSvg}</button>
-      <button class="circle edit" type="button" aria-label="Redigér">${editSvg}</button>
-      ${ps.length>1?`<span class="count" id="gcount">1 / ${ps.length}</span>`:""}
+      ${own?`<button class="circle edit" type="button" aria-label="Redigér">${editSvg}</button>`:""}
+      ${ps.length>1?`<span class="count">1 / ${ps.length}</span>`:""}
     </div>
     <div class="sheet">
+      ${own?"":`<div class="byline"><span class="av" aria-hidden="true">${esc(initials(p))}</span><span><b>${esc(nameOf(p))}</b> <span class="muted">@${esc(p.username)}</span></span></div>`}
       <div class="titlerow"><div><h1>${esc(b.name||"Uden navn")}</h1><div class="meta">${kindName(b.kind)} · ${esc(dateFmt(b.date))}</div></div>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</div>
       ${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}
@@ -624,42 +840,68 @@ function openBake(id){
       ${sub.length?`<div class="subr">${sub.map(s=>`<span>${s[0]} <span class="stars">${stars(s[1])}</span></span>`).join("")}</div>`:""}
       ${b.notes?`<div class="notes"><small>Noter til næste gang</small>${esc(b.notes)}</div>`:""}
       <div class="actions">
-        <button class="btn primary" type="button" id="bAgain">Bag igen</button>
-        <button class="btn" type="button" id="bEdit">Redigér</button>
-        <button class="btn danger" type="button" id="bDel">Slet</button>
+        <button class="btn primary" type="button" id="bAgain">${own?"Bag igen":"Bag den selv"}</button>
+        ${own?`<button class="btn" type="button" id="bEdit">Redigér</button><button class="btn danger" type="button" id="bDel">Slet</button>`:""}
       </div>
     </div>`;
-  hydrate(v);
-  const g = v.querySelector(".gallery"), gc = $("#gcount");
-  if(g && gc) g.addEventListener("scroll",()=>{ const i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth)); gc.textContent=(Math.min(i,ps.length-1)+1)+" / "+ps.length; },{passive:true});
-  v.querySelector(".back").onclick = ()=>{ const r = recipes().find(x=>x.key===keyOf(b.name)); if(r && backTo!=="log") openRecipe(r.key); else { show(backTo); render(); } };
-  v.querySelector(".edit").onclick = $("#bEdit").onclick = ()=>openForm(b,false);
+  hydrate(v); wireGallery(v);
+  const goBack = ()=>{ const r = recipes().find(x=>x.key===keyOf(b.name)); if(own && backTo==="home" && r) openRecipe(r.key); else { show(backTo); render(); } };
+  v.querySelector(".back").onclick = goBack;
   $("#bAgain").onclick = ()=>openForm(b,true);
-  const del=$("#bDel"); let armed=false;
-  del.onclick=async()=>{
-    if(!armed){ armed=true; del.classList.add("armed"); del.textContent="Tryk igen"; setTimeout(()=>{ if(del.isConnected){ armed=false; del.classList.remove("armed"); del.textContent="Slet"; } },4000); return; }
-    try{
-      await store.remove(b.id); picsOf(b).forEach(p=>photos.del(p).catch(()=>{}));
-      const r = recipes().find(x=>x.key===keyOf(b.name));
-      if(r && backTo!=="log") openRecipe(r.key); else { show(backTo); render(); }
-    }catch(e){ del.textContent="Prøv igen"; }
-  };
+  if(own){
+    v.querySelector(".edit").onclick = $("#bEdit").onclick = ()=>openForm(b,false);
+    const del=$("#bDel"); let armed=false;
+    del.onclick=async()=>{
+      if(!armed){ armed=true; del.classList.add("armed"); del.textContent="Tryk igen"; setTimeout(()=>{ if(del.isConnected){ armed=false; del.classList.remove("armed"); del.textContent="Slet"; } },4000); return; }
+      del.disabled=true;
+      try{ await api.deleteBake(b); bakes=bakes.filter(x=>x.id!==b.id); toast("Bagningen er slettet."); goBack(); }
+      catch(e){ del.disabled=false; del.textContent="Prøv igen"; toast("Kunne ikke slette. Tjek din forbindelse."); }
+    };
+  }
   show("bake");
 }
 
-/* ---------- log ---------- */
-function renderLog(){
-  const list = bakes.slice().sort(byNewest);
-  $("#logEmpty").hidden = list.length>0;
-  const box = $("#logRows");
-  box.innerHTML = list.map(b=>`
-    <button class="row" type="button" data-bake="${esc(b.id)}">
-      <span class="th">${picsOf(b)[0]?img(picsOf(b)[0],""):noimg()}</span>
-      <span class="tx"><b>${esc(b.name||"Uden navn")}</b><span>${esc(shortDate(b.date))} · ${kindName(b.kind)}${b.caption?" · "+esc(b.caption):""}</span></span>
-      ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}
-    </button>`).join("");
-  hydrate(box);
-  box.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>{ backTo="log"; openBake(x.dataset.bake); });
+/* ---------- friends ---------- */
+let searchT;
+$("#userSearch").addEventListener("input", e=>{ clearTimeout(searchT); const q=e.target.value.trim().toLowerCase(); searchT=setTimeout(()=>doSearch(q), 250); });
+const relationTo = id => friendships.find(f=>(f.requester===me.id&&f.addressee===id)||(f.addressee===me.id&&f.requester===id));
+async function doSearch(q){
+  const box=$("#searchRows");
+  if(q.length<2){ box.innerHTML=""; return; }
+  let res=[]; try{ res = await api.searchUsers(q, me.id); }catch(e){ box.innerHTML='<p class="err">Søgningen virkede ikke. Tjek din forbindelse.</p>'; return; }
+  res.forEach(p=>people.set(p.id,p));
+  box.innerHTML = res.length ? res.map(p=>{
+    const f = relationTo(p.id);
+    const state = !f ? `<button class="btn sm primary" type="button" data-req="${esc(p.id)}">Tilføj</button>`
+      : f.status==="accepted" ? `<span class="meta">Venner</span>`
+      : f.requester===me.id ? `<span class="meta">Anmodet</span>` : `<button class="btn sm primary" type="button" data-acc="${f.id}">Godkend</button>`;
+    return `<div class="row"><span class="av">${esc(initials(p))}</span><span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${state}</span></div>`;
+  }).join("") : '<p class="muted" style="margin:0">Ingen brugere fundet.</p>';
+  wireFriendButtons(box, ()=>doSearch(q));
+}
+function wireFriendButtons(root, after){
+  root.querySelectorAll("[data-req]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ await api.request(me.id, b.dataset.req); friendships = await api.friendships(); toast("Venneanmodning sendt."); after&&after(); renderFriends(); }catch(e){ b.disabled=false; toast("Kunne ikke sende anmodningen."); } });
+  root.querySelectorAll("[data-acc]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ await api.accept(+b.dataset.acc); await loadAll(); toast("I er nu venner."); after&&after(); renderFriends(); }catch(e){ b.disabled=false; toast("Kunne ikke godkende."); } });
+  root.querySelectorAll("[data-rm]").forEach(b=>{ let armed=false; b.onclick=async()=>{
+    if(!armed && b.dataset.confirm){ armed=true; b.textContent=b.dataset.confirm; setTimeout(()=>{ if(b.isConnected){ armed=false; b.textContent=b.dataset.label; } },4000); return; }
+    b.disabled=true; try{ await api.removeFriendship(+b.dataset.rm); await loadAll(); after&&after(); renderFriends(); }catch(e){ b.disabled=false; toast("Det lykkedes ikke. Prøv igen."); } }; });
+}
+function renderFriends(){
+  if(!me) return;
+  $("#meAv").textContent = initials(me); $("#meName").textContent = nameOf(me) || "Dig"; $("#meUser").textContent = "@"+me.username;
+  const other = f => personOf(f.requester===me.id ? f.addressee : f.requester);
+  const row = (p, acts) => `<div class="row"><span class="av">${esc(initials(p))}</span><span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${acts}</span></div>`;
+  const inc = friendships.filter(f=>f.status==="pending"&&f.addressee===me.id);
+  const out = friendships.filter(f=>f.status==="pending"&&f.requester===me.id);
+  const acc = friendships.filter(f=>f.status==="accepted");
+  $("#incomingSec").hidden = !inc.length;
+  $("#incomingRows").innerHTML = inc.map(f=>row(other(f), `<button class="btn sm primary" type="button" data-acc="${f.id}">Godkend</button><button class="btn sm" type="button" data-rm="${f.id}" data-label="Afvis">Afvis</button>`)).join("");
+  $("#outgoingSec").hidden = !out.length;
+  $("#outgoingRows").innerHTML = out.map(f=>row(other(f), `<button class="btn sm" type="button" data-rm="${f.id}" data-label="Annullér">Annullér</button>`)).join("");
+  $("#noFriends").hidden = acc.length>0;
+  $("#friendRows").innerHTML = acc.map(f=>row(other(f), `<button class="btn sm danger" type="button" data-rm="${f.id}" data-label="Fjern" data-confirm="Sikker?">Fjern</button>`)).join("");
+  wireFriendButtons($("#v-friends"));
+  updateBadge();
 }
 
 /* ---------- form ---------- */
@@ -672,8 +914,7 @@ function rateUI(){
   });
 }
 function flourRow(f={}){
-  const i = rowSeq++;
-  const row=document.createElement("div"); row.className="flourrow";
+  const i = rowSeq++; const row=document.createElement("div"); row.className="flourrow";
   row.innerHTML=`<input type="text" list="flourTypes" aria-label="Meltype" placeholder="Meltype" class="ft" id="ft-${i}" value="${esc(f.type||"")}">
     <input type="number" inputmode="decimal" aria-label="Gram" placeholder="g" class="fg" id="fg-${i}" min="0" value="${esc(f.g??"")}">
     <button type="button" class="iconbtn" aria-label="Fjern mel">✕</button>`;
@@ -689,27 +930,23 @@ $$("[data-oven]").forEach(b=>b.onclick=()=>setOven(ovenMode===b.dataset.oven?"":
 function readForm(){
   const flours=$$(".flourrow").map(r=>({type:r.querySelector(".ft").value.trim(), g:n(r.querySelector(".fg").value)})).filter(f=>f.type||f.g);
   const v=id=>{ const x=$("#"+id).value; return x===""?null:n(x); };
-  return {
-    date:$("#f-date").value, kind, name:$("#f-name").value.trim(), flours,
+  return { date:$("#f-date").value, kind, name:$("#f-name").value.trim(), flours,
     water:v("f-water"), salt:v("f-salt"), starter:v("f-starter"), extras:$("#f-extras").value.trim(),
     bulk:v("f-bulk"), cold:v("f-cold"), proof:v("f-proof"), temp:v("f-temp"), time:v("f-time"), ovenMode,
     overall:ratings.overall||0, rise:ratings.rise||0, crumb:ratings.crumb||0, crust:ratings.crust||0, taste:ratings.taste||0,
-    notes:$("#f-notes").value.trim(), caption:$("#f-caption").value.trim()
-  };
+    notes:$("#f-notes").value.trim(), caption:$("#f-caption").value.trim() };
 }
-function updateCalc(){
-  const c=calc(readForm());
-  $("#c-ino").textContent=pct(c.ino); $("#c-salt").textContent=pct(c.salt);
-  $("#c-dough").textContent=c.dough?Math.round(c.dough)+" g":"–";
-}
+function updateCalc(){ const c=calc(readForm()); $("#c-ino").textContent=pct(c.ino); $("#c-salt").textContent=pct(c.salt); $("#c-dough").textContent=c.dough?Math.round(c.dough)+" g":"–"; }
 async function renderThumbs(){
   const box = $("#thumbs");
-  box.innerHTML = picItems.map((it,i)=>`<div class="thumb"><img alt="Billede ${i+1}" data-i="${i}"><button type="button" aria-label="Fjern billede ${i+1}" data-rm="${i}">✕</button></div>`).join("");
-  box.querySelectorAll("button[data-rm]").forEach(b=>b.onclick=()=>{ const it = picItems.splice(+b.dataset.rm,1)[0]; if(it && it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} renderThumbs(); });
-  for(const el of box.querySelectorAll("img[data-i]")){ const it = picItems[+el.dataset.i]; try{ el.src = it.url || await photoUrl(it.id) || ""; }catch(e){} }
+  box.innerHTML = picItems.map((it,i)=>`<div class="thumb"><img alt="Billede ${i+1}" data-i="${i}"><button type="button" aria-label="Fjern billede ${i+1}" data-rmp="${i}">✕</button></div>`).join("");
+  box.querySelectorAll("button[data-rmp]").forEach(b=>b.onclick=()=>{ const it = picItems.splice(+b.dataset.rmp,1)[0]; if(it && it.url && it.blob) try{ URL.revokeObjectURL(it.url); }catch(e){} renderThumbs(); });
+  const need = picItems.filter(it=>it.id && !it.url).map(it=>it.id);
+  if(need.length){ try{ const u = await api.photoUrls(need); picItems.forEach(it=>{ if(it.id && u[it.id]) it.url=u[it.id]; }); }catch(e){} }
+  box.querySelectorAll("img[data-i]").forEach(el=>{ const it = picItems[+el.dataset.i]; if(it && it.url) el.src = it.url; });
   $("#photoLblTxt").textContent = picItems.length ? "Tilføj flere billeder" : "Tilføj billeder";
 }
-function setPics(items){ picItems.forEach(it=>{ if(it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} }); picItems = items.slice(); renderThumbs(); }
+function setPics(items){ picItems.forEach(it=>{ if(it.blob && it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} }); picItems = items.slice(); renderThumbs(); }
 async function shrink(file){
   try{
     const bmp = await createImageBitmap(file, {imageOrientation:"from-image"});
@@ -729,7 +966,7 @@ function openForm(b, asNew){
   formReturn = current==="form" ? formReturn : {view:current, recipe:curRecipe, bake:curBake};
   editing = b && !asNew ? b : null;
   const src = b || {flours:[{type:"",g:""}]};
-  $("#formTitle").textContent = editing ? "Redigér" : (b ? "Bag igen" : "Ny bagning");
+  $("#formTitle").textContent = editing ? "Redigér" : (b ? (b.user_id===me.id ? "Bag igen" : "Bag den selv") : "Ny bagning");
   $("#f-date").value = editing ? b.date : new Date().toISOString().slice(0,10);
   setOven(src.ovenMode);
   kind = src.kind || "bread"; $$("[data-kind]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.kind===kind)));
@@ -742,95 +979,108 @@ function openForm(b, asNew){
   set("f-notes", editing ? b.notes : ""); set("f-caption", editing ? b.caption : "");
   setPics(editing ? picsOf(b).map(id=>({id})) : []);
   $("#formErr").hidden=true;
-  $("#recipes").innerHTML=[...new Set(bakes.map(x=>x.name).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join("");
+  $("#recipes").innerHTML=[...new Set(mine().map(x=>x.name).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join("");
   $("#flourTypes").innerHTML=[...new Set([...FLOURS,...bakes.flatMap(x=>(x.flours||[]).map(f=>f.type)).filter(Boolean)])].map(x=>`<option value="${esc(x)}">`).join("");
   rateUI(); updateCalc(); show("form");
 }
 $("#cancelForm").onclick=()=>{
-  const r = formReturn||{view:"home"};
+  const r = formReturn||{view:"feed"};
   if(r.view==="bake" && r.bake && bakes.some(x=>x.id===r.bake)) openBake(r.bake);
   else if(r.view==="recipe" && r.recipe) openRecipe(r.recipe);
-  else { show(r.view==="form"?"home":r.view); render(); }
+  else { show(["feed","home","friends"].includes(r.view)?r.view:"feed"); render(); }
 };
 $("#form").addEventListener("submit",async e=>{
   e.preventDefault();
   const data=readForm(), err=$("#formErr");
   if(!data.date){ err.textContent="Angiv datoen for bagningen."; err.hidden=false; return; }
   if(!data.flours.some(f=>f.g>0)){ err.textContent="Tilføj mindst én slags mel med vægt i gram."; err.hidden=false; return; }
-  const id = editing ? editing.id : "b"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  const rec = {id, ...data, created: editing ? (editing.created||Date.now()) : Date.now()};
+  const id = editing ? editing.id : newId("b");
+  const rec = {id, user_id:me.id, ...data, created: editing ? (editing.created||Date.now()) : Date.now()};
   const btn=$("#saveBtn"); btn.disabled=true; btn.textContent="Gemmer…";
-  const pics = [];
+  const pics = [], uploaded = [];
   try{
+    let k=0;
     for(const it of picItems){
       if(it.id){ pics.push(it.id); continue; }
-      const pid = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-      await photos.put(pid, it.blob); pics.push(pid);
+      btn.textContent = `Uploader billede ${++k}…`;
+      const path = `${me.id}/${id}-${Math.random().toString(36).slice(2,8)}.jpg`;
+      await api.uploadPhoto(path, it.blob); pics.push(path); uploaded.push(path);
     }
-  }catch(ex){ err.textContent="Billederne kunne ikke gemmes. Måske er telefonen ved at løbe tør for plads."; err.hidden=false; btn.disabled=false; btn.textContent="Gem bagning"; return; }
-  rec.pics = pics; delete rec.photo;
-  const oldPics = editing ? picsOf(editing) : [];
-  try{
-    await store.save(rec);
-    oldPics.filter(p=>!pics.includes(p)).forEach(p=>photos.del(p).catch(()=>{}));
-    setPics([]); backTo = backTo==="log"?"log":"home"; openBake(id);
-  }catch(ex){ err.textContent="Bagningen blev ikke gemt. Prøv at trykke Gem igen."; err.hidden=false; }
-  finally{ btn.disabled=false; btn.textContent="Gem bagning"; }
+    rec.pics = pics;
+    btn.textContent="Gemmer…";
+    await api.saveBake(rec);
+    const old = editing ? picsOf(editing) : [];
+    api.removePhotos(old.filter(p=>!pics.includes(p))).catch(()=>{});
+    bakes = bakes.filter(x=>x.id!==id); bakes.push(rec);
+    setPics([]); if(!["feed","home"].includes(backTo)) backTo="feed";
+    toast(editing?"Gemt.":"Bagningen er delt med dine venner.");
+    openBake(id);
+  }catch(ex){
+    api.removePhotos(uploaded).catch(()=>{});
+    err.textContent = (ex && /fetch|network/i.test(ex.message||"")) ? "Ingen forbindelse. Bagningen er ikke gemt – prøv igen, når du har internet." : "Bagningen blev ikke gemt. Prøv at trykke Gem igen.";
+    err.hidden=false;
+  }finally{ btn.disabled=false; btn.textContent="Gem bagning"; }
 });
 
-/* ---------- backup ---------- */
-$("#backupBtn").onclick = () => { $("#backupMsg").textContent=""; show("backup"); };
-$("#backupBack").onclick = () => { show("log"); render(); };
-const blobToDataUrl = b => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsDataURL(b); });
-async function dataUrlToBlob(u){ return await (await fetch(u)).blob(); }
-$("#exportBtn").onclick = async () => {
-  const msg = $("#backupMsg"); msg.className=""; msg.textContent = "Samler backup…";
-  try{
-    const pics = {};
-    for(const b of bakes){ for(const id of picsOf(b)){ const bl = await photos.get(id); if(bl) pics[id] = await blobToDataUrl(bl); } }
-    const json = JSON.stringify({app:"surdejsloggen", version:1, exported:new Date().toISOString(), bakes, photos:pics});
-    const name = "surdejsloggen-backup-" + new Date().toISOString().slice(0,10) + ".json";
-    const file = new File([json], name, {type:"application/json"});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      try{ await navigator.share({files:[file], title:"Surdejsloggen backup"}); msg.className="ok"; msg.textContent="Backup klar. Vælg fx “Gem i Filer”."; return; }
-      catch(e){ if(e && e.name==="AbortError"){ msg.textContent=""; return; } }
-    }
-    const url = URL.createObjectURL(file);
-    const a = document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 30000);
-    msg.className="ok"; msg.textContent="Backup gemt som " + name + ".";
-  }catch(e){ msg.className="err"; msg.textContent="Backuppen kunne ikke laves. Prøv igen."; }
-};
-$("#importFile").addEventListener("change", async e => {
-  const f = e.target.files && e.target.files[0]; e.target.value=""; if(!f) return;
-  const msg = $("#backupMsg"); msg.className=""; msg.textContent="Indlæser…";
-  try{
-    const data = JSON.parse(await f.text());
-    if(!data || data.app!=="surdejsloggen" || !Array.isArray(data.bakes)) throw new Error("format");
-    for(const [id,u] of Object.entries(data.photos||{})) await photos.put(id, await dataUrlToBlob(u));
-    for(const b of data.bakes){ if(b && b.id) await store.save(b); }
-    msg.className="ok"; msg.textContent = data.bakes.length + (data.bakes.length===1?" bagning":" bagninger") + " indlæst.";
-  }catch(err){ msg.className="err"; msg.textContent="Filen kunne ikke læses. Vælg en backup-fil fra Surdejsloggen."; }
-});
+/* ---------- move bakes from the phone (old version) to the account ---------- */
+function openLocalDB(){
+  return new Promise((res)=>{
+    if(!("indexedDB" in window)) return res(null);
+    const r = indexedDB.open("surdejsloggen", 1);
+    r.onupgradeneeded = () => { const d=r.result; if(!d.objectStoreNames.contains("bakes")) d.createObjectStore("bakes",{keyPath:"id"}); if(!d.objectStoreNames.contains("photos")) d.createObjectStore("photos"); };
+    r.onsuccess = () => res(r.result); r.onerror = () => res(null);
+  });
+}
+const idbAll = (db, store) => new Promise(res=>{ const t=db.transaction(store,"readonly"); const q=t.objectStore(store).getAll(); q.onsuccess=()=>res(q.result||[]); q.onerror=()=>res([]); });
+const idbGet = (db, store, key) => new Promise(res=>{ const t=db.transaction(store,"readonly"); const q=t.objectStore(store).get(key); q.onsuccess=()=>res(q.result); q.onerror=()=>res(null); });
+const idbClear = db => new Promise(res=>{ const t=db.transaction(["bakes","photos"],"readwrite"); t.objectStore("bakes").clear(); t.objectStore("photos").clear(); t.oncomplete=()=>res(); t.onerror=()=>res(); });
+async function checkMigration(){
+  if(DEMO) return;
+  const db = await openLocalDB(); if(!db) return;
+  const local = (await idbAll(db,"bakes")).filter(b=>!b.example);
+  const box = $("#migrateBox");
+  if(!local.length){ box.innerHTML=""; return; }
+  box.innerHTML = `<div class="banner"><p><b>Du har ${local.length} ${local.length===1?"bagning":"bagninger"} gemt på telefonen</b> fra den gamle version. Flyt ${local.length===1?"den":"dem"} til din konto, så dine venner også kan se ${local.length===1?"den":"dem"}.</p><button class="btn primary" type="button" id="migrateBtn">Flyt til min konto</button><p class="err" id="migrateErr" hidden></p></div>`;
+  $("#migrateBtn").onclick = async ()=>{
+    const btn=$("#migrateBtn"), err=$("#migrateErr"); btn.disabled=true; err.hidden=true;
+    let done=0;
+    try{
+      for(const b of local){
+        btn.textContent = `Flytter ${++done} af ${local.length}…`;
+        const pics=[];
+        for(const pid of picsOf(b)){
+          const blob = await idbGet(db,"photos",pid); if(!blob) continue;
+          const path = `${me.id}/${b.id}-${Math.random().toString(36).slice(2,8)}.jpg`;
+          await api.uploadPhoto(path, blob); pics.push(path);
+        }
+        const rec = {...b, user_id:me.id, pics}; delete rec.photo; delete rec.example;
+        await api.saveBake(rec);
+      }
+      await idbClear(db);
+      await loadAll(); box.innerHTML=""; renderFeed(); toast("Dine bagninger er flyttet til din konto.");
+    }catch(e){ btn.disabled=false; btn.textContent="Prøv igen"; err.textContent=`Flytningen stoppede ved bagning ${done}. Tjek din forbindelse og prøv igen – allerede flyttede bagninger bliver ikke dobbelte.`; err.hidden=false; }
+  };
+}
 
 /* ---------- start ---------- */
-function render(){ if(current==="home") renderHome(); if(current==="log") renderLog(); }
-$("#skipInstall").onclick = () => { lsSet("installSkipped","1"); show("home"); renderHome(); };
-async function init(){
-  try{
-    idb = await openDB();
-    bakes = await tx("bakes","readonly",s=>s.getAll()) || [];
-    for(const ex of bakes.filter(b=>b.example)) await store.remove(ex.id);
-  }catch(e){
-    $("#homeEmpty").innerHTML = "<h2>Appen kan ikke gemme</h2><p>Telefonen tillader ikke, at appen gemmer data. Slå privat browsing fra, eller installér appen på hjemmeskærmen.</p>";
-  }
-  renderHome();
-  if(!isStandalone() && !lsGet("installSkipped")) show("install");
+$("#skipInstall").onclick = () => { lsSet("installSkipped","1"); boot(); };
+document.addEventListener("visibilitychange", async ()=>{ if(document.visibilityState==="visible" && me && ["feed","home","friends"].includes(current)){ try{ await loadAll(); render(); }catch(e){} } });
+let booted = false;
+async function boot(){
+  if(!isStandalone() && !lsGet("installSkipped") && !DEMO){ show("install"); hideSplash(); return; }
+  booted = true;
+  let s = null; try{ s = await api.session(); }catch(e){}
+  if(s) await enter(s); else show("auth");
   hideSplash();
-  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 }
-init();
-if("serviceWorker" in navigator){ window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+api.onAuth((ev, s)=>{
+  if(!booted) return;
+  if(ev==="SIGNED_IN" && s && (!me || me.id!==s.user.id)) enter(s);
+  if(ev==="SIGNED_OUT") leave();
+  if(ev==="PASSWORD_RECOVERY" && s){ enter(s).then(()=>{ backTo="friends"; show("friends"); renderFriends(); $("#newPass").focus(); toast("Vælg en ny adgangskode nederst på siden."); }); }
+});
+boot();
+if("serviceWorker" in navigator && !DEMO){ window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
 })();
 </script>
 </body>

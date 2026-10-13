@@ -1,10 +1,11 @@
 // Surdejsloggen – gør appen tilgængelig uden internet.
 // Hæv versionsnummeret, når du lægger en ny udgave op, så telefonerne henter den.
-const CACHE = "surdejsloggen-v3";
+const CACHE = "surdejsloggen-v4";
 const FILES = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./vendor/supabase.js",
   "./icons/icon-180.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

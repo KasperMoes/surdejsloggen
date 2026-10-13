@@ -124,3 +124,22 @@ create policy "photos upload" on storage.objects for insert to authenticated
 drop policy if exists "photos delete" on storage.objects;
 create policy "photos delete" on storage.objects for delete to authenticated
   using (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- ---------- strammere adgang til hjælpefunktioner ----------
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+create or replace function public.are_friends(a uuid, b uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select a = auth.uid() and exists (
+    select 1 from public.friendships
+    where status = 'accepted'
+      and ((requester = a and addressee = b) or (requester = b and addressee = a))
+  );
+$$;
+revoke execute on function public.are_friends(uuid, uuid) from public, anon;
+grant execute on function public.are_friends(uuid, uuid) to authenticated;
+
+-- Kun status må ændres på et venskab, og kun visningsnavn på en profil.
+revoke update on public.friendships from authenticated, anon;
+grant update (status) on public.friendships to authenticated;
+revoke update on public.profiles from authenticated, anon;
+grant update (display_name) on public.profiles to authenticated;
