@@ -288,6 +288,50 @@ nav.menu button{font-weight:500}
 form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 .cmform textarea{min-height:46px;flex:1;resize:none;padding:12px}
 .cmform .btn{padding:12px 16px}
+/* ---------- sprødt! ---------- */
+.social{border-top:1px solid var(--line)}
+.likers{display:flex;align-items:center;gap:8px;background:none;border:0;padding:10px 14px 0;font-size:.8rem;color:var(--muted);cursor:pointer;text-align:left;width:100%}
+.likers .stack{display:flex}
+.likers .stack .av{width:22px;height:22px;font-size:.6rem;border-width:1.5px;margin-left:-6px;box-shadow:0 0 0 2px var(--surf)}
+.likers .stack .av:first-child{margin-left:0}
+.likers b{color:var(--ink);font-weight:700}
+.acts{display:flex}
+.acts .cbtn{border-top:0;flex:1;justify-content:center}
+.acts .sbtn{border-right:1px solid var(--line)}
+.sbtn{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;background:none;border:0;padding:11px 14px;font-size:.82rem;color:var(--muted);cursor:pointer}
+.sbtn svg{width:22px;height:22px;overflow:visible}
+.sbtn .crust{fill:none;stroke:currentColor}
+.sbtn .crk{stroke:currentColor}
+.sbtn .spark{stroke:var(--accent);opacity:0}
+.sbtn[aria-pressed="true"]{color:var(--accent);font-weight:700}
+.sbtn[aria-pressed="true"] .crust{fill:var(--accent);stroke:var(--accent)}
+.sbtn[aria-pressed="true"] .crk{stroke:#fff}
+.bake-social{border:1px solid var(--line);border-radius:14px;background:var(--surf);margin-top:4px}
+.bake-social .likers{padding-top:12px}
+.cmright{display:flex;align-items:center;gap:10px;flex:none}
+.cmlike{display:flex;align-items:center;gap:3px;background:none;border:0;padding:0;color:var(--muted);font-size:.72rem;cursor:pointer}
+.cmlike svg{width:16px;height:16px;overflow:visible}
+.cmlike[aria-pressed="true"]{color:var(--accent);font-weight:700}
+.cmlike[aria-pressed="true"] .crust{fill:var(--accent);stroke:var(--accent)}
+.cmlike[aria-pressed="true"] .crk{stroke:#fff}
+.cmlike .crust{fill:none;stroke:currentColor}.cmlike .crk{stroke:currentColor}.cmlike .spark{stroke:var(--accent);opacity:0}
+@media (prefers-reduced-motion:no-preference){
+  .pop svg{animation:crustpop .45s cubic-bezier(.2,.9,.3,1.4)}
+  .pop .spark{animation:spark .5s ease-out}
+}
+@keyframes crustpop{0%{transform:scale(1)}35%{transform:scale(1.35) rotate(-8deg)}100%{transform:none}}
+@keyframes spark{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.5)}}
+.spark{transform-origin:12px 13px}
+.sheetbg{position:fixed;inset:0;z-index:60;background:rgba(42,33,26,.35);display:flex;align-items:flex-end;justify-content:center}
+.lsheet{background:var(--bg);width:100%;max-width:560px;max-height:70vh;overflow:auto;border-radius:20px 20px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.lsheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.lsheet h2{font-size:1.4rem;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.lsheet h2 svg{width:24px;height:24px;color:var(--accent)}
+.lsheet h2 .crust{fill:var(--accent);stroke:var(--accent)}.lsheet h2 .crk{stroke:#fff}.lsheet h2 .spark{display:none}
+.lrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.lrow:last-child{border-bottom:0}
+.lrow>span:not(.av){display:flex;flex-direction:column;font-size:.9rem}
+.lrow small{color:var(--muted);font-size:.75rem}
 </style>
 </head>
 <body>
@@ -613,7 +657,13 @@ function realApi(){
     async comments(bakeId){ const { data, error } = await sb.from("comments").select("id,bake_id,user_id,body,created_at").eq("bake_id", bakeId).order("created_at"); fail(error); return data||[]; },
     async commentCounts(ids){ if(!ids.length) return {}; const { data, error } = await sb.from("comments").select("bake_id").in("bake_id", ids); fail(error); const o={}; (data||[]).forEach(r=>{ o[r.bake_id]=(o[r.bake_id]||0)+1; }); return o; },
     async addComment(bakeId, body, myId){ const { data, error } = await sb.from("comments").insert({ bake_id:bakeId, body, user_id:myId }).select("id,bake_id,user_id,body,created_at").single(); fail(error); return data; },
-    async deleteComment(id){ const { error } = await sb.from("comments").delete().eq("id", id); fail(error); }
+    async deleteComment(id){ const { error } = await sb.from("comments").delete().eq("id", id); fail(error); },
+    async bakeLikes(ids){ if(!ids.length) return []; const { data, error } = await sb.from("bake_likes").select("bake_id,user_id,created_at").in("bake_id", ids).order("created_at"); fail(error); return data||[]; },
+    async likeBake(bakeId, myId){ const { error } = await sb.from("bake_likes").insert({ bake_id:bakeId, user_id:myId }); if(error && error.code!=="23505") fail(error); },
+    async unlikeBake(bakeId, myId){ const { error } = await sb.from("bake_likes").delete().eq("bake_id", bakeId).eq("user_id", myId); fail(error); },
+    async commentLikes(ids){ if(!ids.length) return []; const { data, error } = await sb.from("comment_likes").select("comment_id,user_id").in("comment_id", ids); fail(error); return data||[]; },
+    async likeComment(id, myId){ const { error } = await sb.from("comment_likes").insert({ comment_id:id, user_id:myId }); if(error && error.code!=="23505") fail(error); },
+    async unlikeComment(id, myId){ const { error } = await sb.from("comment_likes").delete().eq("comment_id", id).eq("user_id", myId); fail(error); }
   };
 }
 
@@ -633,6 +683,8 @@ function demoApi(){
     {id:1,bake_id:"x1",user_id:"u3",body:"Den ser fantastisk ud! Hvor meget rug brugte du?",created_at:new Date(Date.now()-3*3600e3).toISOString()},
     {id:2,bake_id:"x1",user_id:"u2",body:"600 g fuldkornsrug og 200 g almindelig rugmel 🙂",created_at:new Date(Date.now()-2*3600e3).toISOString()},
     {id:3,bake_id:"x3",user_id:"u2",body:"Flot åben krumme!",created_at:new Date(Date.now()-26*3600e3).toISOString()}];
+  let blikes = [{bake_id:"x1",user_id:"u3"},{bake_id:"x1",user_id:"u4"},{bake_id:"x1",user_id:"u5"},{bake_id:"x3",user_id:"u2"},{bake_id:"x3",user_id:"u3"}];
+  let clikes = [{comment_id:1,user_id:"u2"},{comment_id:3,user_id:"u1"}];
   let session = lsGet("demoIn") ? { user:{ id:"u1" } } : null; let cb = ()=>{};
   return {
     onAuth: f => { cb=f; },
@@ -658,6 +710,12 @@ function demoApi(){
     async commentCounts(ids){ const o={}; comments.forEach(c=>{ if(ids.includes(c.bake_id)) o[c.bake_id]=(o[c.bake_id]||0)+1; }); return o; },
     async addComment(bakeId, body, myId){ const c={id:cid++, bake_id:bakeId, user_id:myId, body, created_at:new Date().toISOString()}; comments.push(c); return c; },
     async deleteComment(id){ comments=comments.filter(c=>c.id!==id); },
+    async bakeLikes(ids){ return blikes.filter(l=>ids.includes(l.bake_id)); },
+    async likeBake(bakeId, myId){ blikes.push({bake_id:bakeId, user_id:myId}); },
+    async unlikeBake(bakeId, myId){ blikes=blikes.filter(l=>!(l.bake_id===bakeId&&l.user_id===myId)); },
+    async commentLikes(ids){ return clikes.filter(l=>ids.includes(l.comment_id)); },
+    async likeComment(id, myId){ clikes.push({comment_id:id, user_id:myId}); },
+    async unlikeComment(id, myId){ clikes=clikes.filter(l=>!(l.comment_id===id&&l.user_id===myId)); },
     async uploadAvatar(path, blob){ imgs["av:"+path]=URL.createObjectURL(blob); },
     async removeAvatar(){},
     async setAvatar(id, path){ const p=people.find(x=>x.id===id); p.avatar=imgs["av:"+path]; },
@@ -672,6 +730,7 @@ let bakes = [];           // all visible (mine + friends)
 let people = new Map();   // id -> profile
 let friendships = [];
 let commentCounts = {};
+let likes = new Map();    // bakeId -> [userId] (ældste først)
 const mine = () => bakes.filter(b=>b.user_id===me.id);
 const personOf = id => people.get(id) || {id, username:"?", display_name:""};
 const nameOf = p => p.display_name || p.username;
@@ -679,8 +738,11 @@ const nameOf = p => p.display_name || p.username;
 async function loadAll(){
   const [bs, fs] = await Promise.all([api.bakes(), api.friendships()]);
   bakes = bs; friendships = fs;
-  try{ commentCounts = await api.commentCounts(bs.slice(0,150).map(b=>b.id)); }catch(e){ commentCounts = {}; }
-  const ids = [...new Set([me.id, ...bs.map(b=>b.user_id), ...fs.flatMap(f=>[f.requester,f.addressee])])].filter(id=>!people.has(id));
+  const top = bs.slice(0,150).map(b=>b.id);
+  const [cc, ls] = await Promise.all([api.commentCounts(top).catch(()=>({})), api.bakeLikes(top).catch(()=>[])]);
+  commentCounts = cc; likes = new Map();
+  ls.forEach(l=>{ if(!likes.has(l.bake_id)) likes.set(l.bake_id, []); likes.get(l.bake_id).push(l.user_id); });
+  const ids = [...new Set([me.id, ...bs.map(b=>b.user_id), ...fs.flatMap(f=>[f.requester,f.addressee]), ...ls.map(l=>l.user_id)])].filter(id=>!people.has(id));
   (await api.profiles(ids)).forEach(p=>people.set(p.id,p));
   updateBadge();
 }
@@ -897,12 +959,11 @@ function renderFeed(){
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
       ${galleryHtml(picsOf(b), b.name||"bagningen")}
       <button class="pbody" type="button" data-bake="${esc(b.id)}"><span class="ptitle">${esc(b.name||"Uden navn")}</span>${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}<span class="ticket">${tick.map(t=>`<span>${esc(t)}</span>`).join("")}</span></button>
-      <button class="cbtn" type="button" data-cm="${esc(b.id)}">${bubbleSvg}${commentCounts[b.id] ? commentCounts[b.id]+(commentCounts[b.id]===1?" kommentar":" kommentarer") : "Skriv en kommentar"}</button>
+      <div class="social" data-soc="${esc(b.id)}">${socialHtml(b)}</div>
     </article>`;
   }).join("");
-  hydrate(box); wireGallery(box);
+  hydrate(box); wireGallery(box); wireSocial(box);
   box.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>{ backTo="feed"; openBake(x.dataset.bake); });
-  box.querySelectorAll("[data-cm]").forEach(x=>x.onclick=()=>{ backTo="feed"; openBake(x.dataset.cm, true); });
 }
 
 /* ---------- my recipes ---------- */
@@ -1017,6 +1078,7 @@ function openBake(id, focusComment){
         <button class="btn primary" type="button" id="bAgain">${own?"Bag igen":"Bag den selv"}</button>
         ${own?`<button class="btn" type="button" id="bEdit">Redigér</button><button class="btn danger" type="button" id="bDel">Slet</button>`:""}
       </div>
+      <div class="social bake-social" data-soc="${esc(b.id)}">${socialHtml(b)}</div>
       <div class="comments">
         <h2>Kommentarer</h2>
         <div class="cmlist" id="cmList"><p class="muted" style="margin:0">Henter kommentarer…</p></div>
@@ -1027,7 +1089,7 @@ function openBake(id, focusComment){
         </form>
       </div>
     </div>`;
-  hydrate(v); wireGallery(v);
+  hydrate(v); wireGallery(v); wireSocial(v);
   const goBack = ()=>{ const r = recipes().find(x=>x.key===keyOf(b.name)); if(own && backTo==="home" && r) openRecipe(r.key); else { show(backTo); render(); } };
   v.querySelector(".back").onclick = goBack;
   $("#bAgain").onclick = ()=>openForm(b,true);
@@ -1045,30 +1107,100 @@ function openBake(id, focusComment){
   loadComments(b, focusComment);
 }
 const bubbleSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+/* ---------- sprødt! ---------- */
+const crustSvg = '<svg viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="spark" fill="none"><path d="M12 1.5v2.2M4.2 4.8l1.6 1.5M19.8 4.8l-1.6 1.5M1.5 11.5h2M20.5 11.5h2"/></g><path class="crust" d="M3 18.5c-.6-5.6 3.6-10 9-10s9.6 4.4 9 10z"/><path class="crk" fill="none" stroke-width="1.5" d="M8 10.5l1.2 2.2-1 1.8M12.3 9.2l-.8 2.4 1.3 2M16.4 10.6l-1.2 2 .9 1.9"/></svg>';
+const sprodtCount = k => k===1 ? "1 × sprødt" : k+" × sprødt";
+function likersText(ids, kind){
+  const it = kind==="buns" ? "synes, de er sprøde" : "synes, den er sprød";
+  const nm = id => id===me.id ? "Dig" : nameOf(personOf(id));
+  const order = [...ids.filter(id=>id===me.id), ...ids.filter(id=>id!==me.id).reverse()];
+  const n0 = order.length;
+  if(n0===1) return `<b>${esc(nm(order[0]))}</b> ${it}`;
+  if(n0===2) return `<b>${esc(nm(order[0]))}</b> og <b>${esc(nm(order[1]))}</b> ${it}`;
+  return `<b>${esc(nm(order[0]))}</b> og ${n0-1} andre ${it}`;
+}
+function socialHtml(b){
+  const ids = likes.get(b.id)||[], mineL = ids.includes(me.id), k = ids.length, cc = commentCounts[b.id]||0;
+  const stack = [...ids].reverse().slice(0,3).map(id=>av(personOf(id))).join("");
+  return `${k?`<button class="likers" type="button" data-likers="${esc(b.id)}" aria-label="Se hvem der synes, den er sprød"><span class="stack">${stack}</span><span>${likersText(ids, b.kind)}</span></button>`:""}
+    <div class="acts">
+      <button class="sbtn" type="button" data-like="${esc(b.id)}" aria-pressed="${mineL}">${crustSvg}<span>${k ? sprodtCount(k) : "Sprødt!"}</span></button>
+      <button class="cbtn" type="button" data-cm="${esc(b.id)}">${bubbleSvg}${cc ? cc+(cc===1?" kommentar":" kommentarer") : "Kommentér"}</button>
+    </div>`;
+}
+function refreshSocial(bakeId, pop){
+  const b = bakes.find(x=>x.id===bakeId); if(!b) return;
+  document.querySelectorAll(`[data-soc="${CSS.escape(bakeId)}"]`).forEach(el=>{
+    el.innerHTML = socialHtml(b); wireSocial(el);
+    if(pop){ const s=el.querySelector(".sbtn"); s.classList.add("pop"); }
+  });
+}
+function wireSocial(root){
+  root.querySelectorAll("[data-like]").forEach(x=>x.onclick=()=>toggleLike(x.dataset.like));
+  root.querySelectorAll("[data-likers]").forEach(x=>x.onclick=()=>showLikers(likes.get(x.dataset.likers)||[]));
+  root.querySelectorAll("[data-cm]").forEach(x=>x.onclick=()=>{
+    if(curBake===x.dataset.cm && $("#v-bake").contains(x)){ const f=$("#cmForm"); f.scrollIntoView({block:"center",behavior:"smooth"}); setTimeout(()=>$("#cmText").focus(),300); return; }
+    if($("#v-feed").contains(x)) backTo="feed";
+    openBake(x.dataset.cm, true);
+  });
+}
+const likeBusy = new Set();
+async function toggleLike(bakeId){
+  if(likeBusy.has(bakeId)) return; likeBusy.add(bakeId);
+  const ids = likes.get(bakeId)||[], had = ids.includes(me.id);
+  likes.set(bakeId, had ? ids.filter(i=>i!==me.id) : [...ids, me.id]);
+  refreshSocial(bakeId, !had);
+  if(!had && navigator.vibrate) try{ navigator.vibrate(12); }catch(e){}
+  try{ had ? await api.unlikeBake(bakeId, me.id) : await api.likeBake(bakeId, me.id); }
+  catch(e){ likes.set(bakeId, ids); refreshSocial(bakeId); toast("Det lykkedes ikke. Tjek din forbindelse."); }
+  likeBusy.delete(bakeId);
+}
+async function showLikers(ids){
+  const missing = ids.filter(id=>!people.has(id));
+  if(missing.length) try{ (await api.profiles(missing)).forEach(p=>people.set(p.id,p)); }catch(e){}
+  const bg = document.createElement("div"); bg.className="sheetbg";
+  bg.innerHTML = `<div class="lsheet" role="dialog" aria-modal="true" aria-label="Sprødt!"><div class="grab"></div><h2>${crustSvg}${esc(sprodtCount(ids.length))}</h2>
+    ${[...ids].reverse().map(id=>{ const p=personOf(id); return `<div class="lrow">${av(p)}<span><b>${esc(id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)}</small></span></div>`; }).join("")}</div>`;
+  const close = ()=>{ bg.remove(); document.removeEventListener("keydown", esc_); };
+  const esc_ = e=>{ if(e.key==="Escape") close(); };
+  bg.onclick = e=>{ if(e.target===bg) close(); };
+  document.addEventListener("keydown", esc_);
+  document.body.appendChild(bg);
+}
 const ago = iso => { const d=(Date.now()-Date.parse(iso))/1000; if(d<60) return "lige nu"; if(d<3600) return Math.floor(d/60)+" min"; if(d<86400) return Math.floor(d/3600)+" t"; if(d<7*86400) return Math.floor(d/86400)+" d"; try{ return new Date(iso).toLocaleDateString("da-DK",{day:"numeric",month:"short"}); }catch(e){ return ""; } };
 async function loadComments(b, focus){
   const list=$("#cmList"), form=$("#cmForm"), txt=$("#cmText");
   const draw = () => {
     list.innerHTML = cs.length ? cs.map(c=>{ const p=personOf(c.user_id); const canDel = c.user_id===me.id || b.user_id===me.id;
-      return `<div class="cm">${av(p)}<div class="bub"><div class="cmtop"><span><b>${esc(c.user_id===me.id?"Dig":nameOf(p))}</b> · ${esc(ago(c.created_at))}</span>${canDel?`<button class="del" type="button" data-del="${c.id}">Slet</button>`:""}</div><p>${esc(c.body)}</p></div></div>`; }).join("")
+      const lk = cl.get(c.id)||[], mineL = lk.includes(me.id);
+      return `<div class="cm">${av(p)}<div class="bub"><div class="cmtop"><span><b>${esc(c.user_id===me.id?"Dig":nameOf(p))}</b> · ${esc(ago(c.created_at))}</span><span class="cmright"><button class="cmlike${popId===c.id?" pop":""}" type="button" data-clike="${c.id}" aria-pressed="${mineL}" aria-label="${mineL?"Fjern sprødt":"Sprødt!"}${lk.length?" ("+lk.length+")":""}">${crustSvg}${lk.length?`<span>${lk.length}</span>`:""}</button>${canDel?`<button class="del" type="button" data-del="${c.id}">Slet</button>`:""}</span></div><p>${esc(c.body)}</p></div></div>`; }).join("")
       : '<p class="muted" style="margin:0">Ingen kommentarer endnu. Skriv den første.</p>';
     list.querySelectorAll("[data-del]").forEach(x=>{ let armed=false; x.onclick=async()=>{
       if(!armed){ armed=true; x.textContent="Sikker?"; setTimeout(()=>{ if(x.isConnected){ armed=false; x.textContent="Slet"; } },4000); return; }
-      try{ await api.deleteComment(+x.dataset.del); cs=cs.filter(c=>c.id!==+x.dataset.del); commentCounts[b.id]=cs.length; draw(); }catch(e){ toast("Kommentaren kunne ikke slettes."); } }; });
+      try{ await api.deleteComment(+x.dataset.del); cs=cs.filter(c=>c.id!==+x.dataset.del); commentCounts[b.id]=cs.length; draw(); refreshSocial(b.id); }catch(e){ toast("Kommentaren kunne ikke slettes."); } }; });
+    list.querySelectorAll("[data-clike]").forEach(x=>x.onclick=async()=>{
+      const id=+x.dataset.clike; if(cbusy.has(id)) return; cbusy.add(id);
+      const lk=cl.get(id)||[], had=lk.includes(me.id);
+      cl.set(id, had ? lk.filter(i=>i!==me.id) : [...lk, me.id]); popId = had ? null : id; draw(); popId=null;
+      try{ had ? await api.unlikeComment(id, me.id) : await api.likeComment(id, me.id); }
+      catch(e){ cl.set(id, lk); draw(); toast("Det lykkedes ikke. Tjek din forbindelse."); }
+      cbusy.delete(id);
+    });
   };
-  let cs=[];
+  let cs=[], cl=new Map(), popId=null; const cbusy=new Set();
   try{
     cs = await api.comments(b.id);
+    try{ (await api.commentLikes(cs.map(c=>c.id))).forEach(l=>{ if(!cl.has(l.comment_id)) cl.set(l.comment_id,[]); cl.get(l.comment_id).push(l.user_id); }); }catch(e){}
     const missing=[...new Set(cs.map(c=>c.user_id))].filter(id=>!people.has(id));
     if(missing.length) (await api.profiles(missing)).forEach(p=>people.set(p.id,p));
   }catch(e){ list.innerHTML='<p class="err">Kommentarerne kunne ikke hentes. Tjek din forbindelse.</p>'; }
   if(curBake!==b.id) return;
-  draw(); commentCounts[b.id]=cs.length;
+  draw(); if(commentCounts[b.id]!==cs.length){ commentCounts[b.id]=cs.length; refreshSocial(b.id); }
   txt.addEventListener("input",()=>{ txt.style.height="auto"; txt.style.height=Math.min(txt.scrollHeight,160)+"px"; });
   form.onsubmit = async e=>{
     e.preventDefault(); const body=txt.value.trim(); if(!body) return;
     const btn=$("#cmSend"); btn.disabled=true;
-    try{ const c = await api.addComment(b.id, body, me.id); cs.push(c); txt.value=""; txt.style.height="auto"; commentCounts[b.id]=cs.length; draw(); }
+    try{ const c = await api.addComment(b.id, body, me.id); cs.push(c); txt.value=""; txt.style.height="auto"; commentCounts[b.id]=cs.length; draw(); refreshSocial(b.id); }
     catch(ex){ toast("Kommentaren blev ikke sendt. Prøv igen."); }
     btn.disabled=false;
   };
