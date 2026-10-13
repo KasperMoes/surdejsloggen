@@ -161,3 +161,8 @@ grant update (display_name) on public.profiles to authenticated;
 -- ---------- ret kommentarer ----------
 -- Migration "comments_edit": kolonnen edited_at; man må kun rette body på sine egne
 -- kommentarer; trigger comments_edited sætter edited_at.
+
+-- ---------- tags (@brugernavn) ----------
+-- Migration "mentions_push": triggers push_on_bake_tag og push_on_comment_tag, når en tekst
+-- med @ bliver rettet. Edge function "push" finder nye @brugernavne og sender kun til folk,
+-- der må se bagningen (ejeren og ejerens venner).

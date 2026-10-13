@@ -1,6 +1,6 @@
 // Surdejsloggen – gør appen tilgængelig uden internet.
 // Hæv versionsnummeret, når du lægger en ny udgave op, så telefonerne henter den.
-const CACHE = "surdejsloggen-v11";
+const CACHE = "surdejsloggen-v12";
 const FILES = [
   "./",
   "./index.html",

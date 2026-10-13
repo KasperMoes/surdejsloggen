@@ -292,6 +292,17 @@ nav.menu button{font-weight:500}
 form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 .cmform textarea{min-height:46px;flex:1;resize:none;padding:12px}
 .cmform .btn{padding:12px 16px}
+/* ---------- tags ---------- */
+.mention{color:var(--accent);font-weight:700}
+.mbox{display:flex;flex-direction:column;background:var(--surf);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.mbox[hidden]{display:none}
+.mbox button{display:flex;align-items:center;gap:10px;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 12px;text-align:left;cursor:pointer;font-size:.88rem;font-weight:400}
+.mbox button:last-child{border-bottom:0}
+.mbox button[aria-selected="true"]{background:var(--bg)}
+.mbox .av{width:30px;height:30px;font-size:.75rem}
+.mbox span{display:flex;flex-direction:column}
+.mbox small{color:var(--muted);font-size:.72rem}
+.mbox.below{margin-top:-4px}
 /* ---------- sprødt! ---------- */
 .social{border-top:1px solid var(--line)}
 .likers{display:flex;align-items:center;gap:8px;background:none;border:0;padding:10px 14px 0;font-size:.8rem;color:var(--muted);cursor:pointer;text-align:left;width:100%}
@@ -477,7 +488,8 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
         <span id="photoLblTxt">Tilføj billeder</span>
         <input type="file" id="f-photo" accept="image/*" multiple class="vh">
       </label>
-      <label class="f" for="f-caption">Tekst <span class="u">(valgfri – vises for dine venner)</span><textarea id="f-caption" placeholder="Fx: Første forsøg med rug – flot ovnspring!"></textarea></label>
+      <label class="f" for="f-caption">Tekst <span class="u">(valgfri – vises for dine venner · skriv @ for at tagge en ven)</span><textarea id="f-caption" placeholder="Fx: Første forsøg med rug – bagt sammen med @mette"></textarea></label>
+      <div class="mbox below" id="capMentions" role="listbox" aria-label="Tag en ven" hidden></div>
     </fieldset>
     <fieldset>
       <legend>Mel</legend>
@@ -686,7 +698,7 @@ function demoApi(){
   ];
   let cid = 100, comments = [
     {id:1,bake_id:"x1",user_id:"u3",body:"Den ser fantastisk ud! Hvor meget rug brugte du?",created_at:new Date(Date.now()-3*3600e3).toISOString()},
-    {id:2,bake_id:"x1",user_id:"u2",body:"600 g fuldkornsrug og 200 g almindelig rugmel 🙂",created_at:new Date(Date.now()-2*3600e3).toISOString()},
+    {id:2,bake_id:"x1",user_id:"u2",body:"@jonas_rug 600 g fuldkornsrug og 200 g almindelig rugmel 🙂",created_at:new Date(Date.now()-2*3600e3).toISOString()},
     {id:3,bake_id:"x3",user_id:"u2",body:"Flot åben krumme!",created_at:new Date(Date.now()-26*3600e3).toISOString()}];
   let blikes = [{bake_id:"x1",user_id:"u3"},{bake_id:"x1",user_id:"u4"},{bake_id:"x1",user_id:"u5"},{bake_id:"x3",user_id:"u2"},{bake_id:"x3",user_id:"u3"}];
   let clikes = [{comment_id:1,user_id:"u2"},{comment_id:3,user_id:"u1"}];
@@ -964,7 +976,7 @@ function renderFeed(){
       <div class="who">${av(p)}<span class="nm"><b>${esc(b.user_id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)} · ${esc(shortDate(b.date))}</small></span>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
       ${galleryHtml(picsOf(b), b.name||"bagningen")}
-      <button class="pbody" type="button" data-bake="${esc(b.id)}"><span class="ptitle">${esc(b.name||"Uden navn")}</span>${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}<span class="ticket">${tick.map(t=>`<span>${esc(t)}</span>`).join("")}</span></button>
+      <button class="pbody" type="button" data-bake="${esc(b.id)}"><span class="ptitle">${esc(b.name||"Uden navn")}</span>${b.caption?`<p class="cap">${rich(b.caption)}</p>`:""}<span class="ticket">${tick.map(t=>`<span>${esc(t)}</span>`).join("")}</span></button>
       <div class="social" data-soc="${esc(b.id)}">${socialHtml(b)}</div>
     </article>`;
   }).join("");
@@ -1070,7 +1082,7 @@ function openBake(id, focusComment){
       ${own?"":`<div class="byline">${av(p)}<span><b>${esc(nameOf(p))}</b> <span class="muted">@${esc(p.username)}</span></span></div>`}
       <div class="titlerow"><div><h1>${esc(b.name||"Uden navn")}</h1><div class="meta">${kindName(b.kind)} · ${esc(dateFmt(b.date))}</div></div>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</div>
-      ${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}
+      ${b.caption?`<p class="cap">${rich(b.caption)}</p>`:""}
       <div class="info">
         <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 9h12l-1 11H7z"/><path d="M9 9V6a3 3 0 016 0v3"/></svg><span><b>${Math.round(c.flourG)} g mel</b>${esc(flourText(b))}</span></div>
         <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 01-12 0c0-3.5 3-7 6-11z"/></svg><span><b>${fmt(b.water)} g vand · ${fmt(b.starter)} g surdej · ${fmt(b.salt)} g salt</b>Hydrering ${pct(c.hyd)} · surdej ${pct(c.ino)} · salt ${pct(c.salt)}${b.extras?"<br>Ekstra: "+esc(b.extras):""}</span></div>
@@ -1088,9 +1100,10 @@ function openBake(id, focusComment){
       <div class="comments">
         <h2>Kommentarer</h2>
         <div class="cmlist" id="cmList"><p class="muted" style="margin:0">Henter kommentarer…</p></div>
+        <div class="mbox" id="cmMentions" role="listbox" aria-label="Tag en ven" hidden></div>
         <form class="cmform" id="cmForm" novalidate>
           <label class="vh" for="cmText">Skriv en kommentar</label>
-          <textarea id="cmText" rows="1" maxlength="1000" placeholder="Skriv en kommentar…"></textarea>
+          <textarea id="cmText" rows="1" maxlength="1000" placeholder="Skriv en kommentar… (@ tagger)"></textarea>
           <button class="btn primary" type="submit" id="cmSend">Send</button>
         </form>
       </div>
@@ -1113,6 +1126,54 @@ function openBake(id, focusComment){
   loadComments(b, focusComment);
 }
 const bubbleSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+/* ---------- tags (@brugernavn) ---------- */
+const MENTION_RE = /(^|[^a-z0-9_.@])@([a-z0-9_.]{3,24})/gi;
+function rich(text){
+  return esc(text).replace(MENTION_RE, (m, pre, u)=>{ const t=u.replace(/\.+$/,""), rest=u.slice(t.length); return t.length>=3 ? `${pre}<span class="mention">@${t}</span>${rest}` : m; });
+}
+const friendIds = () => friendships.filter(f=>f.status==="accepted").map(f=>f.requester===me.id?f.addressee:f.requester);
+function mentionable(b){
+  const ids = new Set(friendIds());
+  if(b){ ids.add(b.user_id); }
+  ids.delete(me.id);
+  return [...ids].map(personOf).filter(p=>p.username && p.username!=="?");
+}
+function attachMentions(ta, box, cands){
+  if(ta._mentions) return; ta._mentions = true;
+  let hits = [], sel = 0, start = -1;
+  const hide = ()=>{ box.hidden = true; hits = []; };
+  const pick = p => {
+    const v = ta.value, end = ta.selectionStart, ins = "@"+p.username+" ";
+    ta.value = v.slice(0,start) + ins + v.slice(end);
+    const pos = start + ins.length; ta.setSelectionRange(pos,pos); hide(); ta.focus();
+    ta.dispatchEvent(new Event("input"));
+  };
+  const draw = () => {
+    box.innerHTML = hits.map((p,i)=>`<button type="button" role="option" aria-selected="${i===sel}" data-i="${i}">${av(p)}<span><b>${esc(nameOf(p))}</b><small>@${esc(p.username)}</small></span></button>`).join("");
+    box.querySelectorAll("button").forEach(x=>{ x.onmousedown = e=>e.preventDefault(); x.onclick = ()=>pick(hits[+x.dataset.i]); });
+    box.hidden = !hits.length;
+  };
+  const check = () => {
+    const before = ta.value.slice(0, ta.selectionStart);
+    const m = before.match(/(^|[^a-z0-9_.@])@([a-z0-9_.]{0,24})$/i);
+    if(!m){ hide(); return; }
+    const q = m[2].toLowerCase(); start = before.length - m[2].length - 1;
+    hits = cands().filter(p=>p.username.startsWith(q) || (p.display_name||"").toLowerCase().split(/\s+/).some(w=>w.startsWith(q)))
+      .sort((a,b)=>nameOf(a).localeCompare(nameOf(b),"da")).slice(0,5);
+    sel = 0; draw();
+  };
+  ta.addEventListener("input", check);
+  ta.addEventListener("click", check);
+  ta.addEventListener("keydown", e=>{
+    if(box.hidden || !hits.length) return;
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); sel=(sel+(e.key==="ArrowDown"?1:hits.length-1))%hits.length; draw(); }
+    else if(e.key==="Enter"||e.key==="Tab"){ e.preventDefault(); pick(hits[sel]); }
+    else if(e.key==="Escape"){ hide(); }
+  });
+  ta.addEventListener("blur", ()=>setTimeout(hide,150));
+}
+attachMentions($("#f-caption"), $("#capMentions"), ()=>mentionable(null));
+
 /* ---------- sprødt! ---------- */
 const crustSvg = '<svg viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="spark" fill="none"><path d="M12 1.5v2.2M4.2 4.8l1.6 1.5M19.8 4.8l-1.6 1.5M1.5 11.5h2M20.5 11.5h2"/></g><path class="crust" d="M3 18.5c-.6-5.6 3.6-10 9-10s9.6 4.4 9 10z"/><path class="crk" fill="none" stroke-width="1.5" d="M8 10.5l1.2 2.2-1 1.8M12.3 9.2l-.8 2.4 1.3 2M16.4 10.6l-1.2 2 .9 1.9"/></svg>';
 const sprodtCount = k => k===1 ? "1 × sprødt" : k+" × sprødt";
@@ -1180,13 +1241,13 @@ async function loadComments(b, focus){
     list.innerHTML = cs.length ? cs.map(c=>{ const p=personOf(c.user_id); const canDel = c.user_id===me.id || b.user_id===me.id;
       const lk = cl.get(c.id)||[], mineL = lk.includes(me.id);
       return `<div class="cm">${av(p)}<div class="bub"><div class="cmtop"><span><b>${esc(c.user_id===me.id?"Dig":nameOf(p))}</b> · ${esc(ago(c.created_at))}</span><span class="cmright"><button class="cmlike${popId===c.id?" pop":""}" type="button" data-clike="${c.id}" aria-pressed="${mineL}" aria-label="${mineL?"Fjern sprødt":"Sprødt!"}${lk.length?" ("+lk.length+")":""}">${crustSvg}${lk.length?`<span>${lk.length}</span>`:""}</button>${c.user_id===me.id && editId!==c.id?`<button class="del" type="button" data-edit="${c.id}">Ret</button>`:""}${canDel && editId!==c.id?`<button class="del" type="button" data-del="${c.id}">Slet</button>`:""}</span></div>${editId===c.id
-        ? `<div class="cmedit"><label class="vh" for="cmEdit">Ret kommentar</label><textarea id="cmEdit" rows="2" maxlength="1000">${esc(c.body)}</textarea><div class="cmeditbtns"><button class="btn sm" type="button" data-cancel>Annullér</button><button class="btn sm primary" type="button" data-save="${c.id}">Gem</button></div></div>`
-        : `<p>${esc(c.body)}${c.edited_at?' <span class="edited">· redigeret</span>':""}</p>`}</div></div>`; }).join("")
+        ? `<div class="cmedit"><label class="vh" for="cmEdit">Ret kommentar</label><textarea id="cmEdit" rows="2" maxlength="1000">${esc(c.body)}</textarea><div class="mbox" id="cmEditMentions" role="listbox" aria-label="Tag en ven" hidden></div><div class="cmeditbtns"><button class="btn sm" type="button" data-cancel>Annullér</button><button class="btn sm primary" type="button" data-save="${c.id}">Gem</button></div></div>`
+        : `<p>${rich(c.body)}${c.edited_at?' <span class="edited">· redigeret</span>':""}</p>`}</div></div>`; }).join("")
       : '<p class="muted" style="margin:0">Ingen kommentarer endnu. Skriv den første.</p>';
     list.querySelectorAll("[data-del]").forEach(x=>{ let armed=false; x.onclick=async()=>{
       if(!armed){ armed=true; x.textContent="Sikker?"; setTimeout(()=>{ if(x.isConnected){ armed=false; x.textContent="Slet"; } },4000); return; }
       try{ await api.deleteComment(+x.dataset.del); cs=cs.filter(c=>c.id!==+x.dataset.del); commentCounts[b.id]=cs.length; draw(); refreshSocial(b.id); }catch(e){ toast("Kommentaren kunne ikke slettes."); } }; });
-    list.querySelectorAll("[data-edit]").forEach(x=>x.onclick=()=>{ editId=+x.dataset.edit; draw(); const t=$("#cmEdit"); if(t){ const fit=()=>{ t.style.height="auto"; t.style.height=Math.min(t.scrollHeight,200)+"px"; }; fit(); t.addEventListener("input",fit); t.focus(); t.setSelectionRange(t.value.length,t.value.length); } });
+    list.querySelectorAll("[data-edit]").forEach(x=>x.onclick=()=>{ editId=+x.dataset.edit; draw(); const t=$("#cmEdit"); if(t){ const fit=()=>{ t.style.height="auto"; t.style.height=Math.min(t.scrollHeight,200)+"px"; }; fit(); t.addEventListener("input",fit); attachMentions(t, $("#cmEditMentions"), ()=>mentionable(b)); t.focus(); t.setSelectionRange(t.value.length,t.value.length); } });
     list.querySelectorAll("[data-cancel]").forEach(x=>x.onclick=()=>{ editId=null; draw(); });
     list.querySelectorAll("[data-save]").forEach(x=>x.onclick=async()=>{
       const id=+x.dataset.save, body=$("#cmEdit").value.trim(), old=cs.find(c=>c.id===id);
@@ -1215,6 +1276,7 @@ async function loadComments(b, focus){
   if(curBake!==b.id) return;
   draw(); if(commentCounts[b.id]!==cs.length){ commentCounts[b.id]=cs.length; refreshSocial(b.id); }
   txt.addEventListener("input",()=>{ txt.style.height="auto"; txt.style.height=Math.min(txt.scrollHeight,160)+"px"; });
+  attachMentions(txt, $("#cmMentions"), ()=>mentionable(b));
   form.onsubmit = async e=>{
     e.preventDefault(); const body=txt.value.trim(); if(!body) return;
     const btn=$("#cmSend"); btn.disabled=true;
