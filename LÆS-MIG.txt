@@ -1,0 +1,33 @@
+SURDEJSLOGGEN – SÅDAN LÆGGER DU DEN PÅ NETTET (GRATIS)
+
+Mappen her er hele appen. Den skal ligge på en hjemmeside med https,
+så du kan åbne den i Safari og lægge den på hjemmeskærmen.
+
+MULIGHED A: GITHUB PAGES (gratis, bliver liggende)
+1. Opret en gratis konto på github.com.
+2. Tryk "New repository". Kald det fx surdejsloggen. Vælg "Public". Tryk "Create repository".
+3. Tryk "uploading an existing file". Træk ALLE filer og mapper fra denne mappe
+   ind (index.html, sw.js, manifest.webmanifest, mapperne icons og fonts).
+   Tryk "Commit changes".
+4. Gå til Settings → Pages. Under "Branch" vælg "main" og "/ (root)". Tryk "Save".
+5. Efter et par minutter ligger appen på:
+   https://DIT-BRUGERNAVN.github.io/surdejsloggen/
+
+MULIGHED B: NETLIFY (gratis)
+1. Opret en gratis konto på netlify.com.
+2. Gå til app.netlify.com/drop og træk hele mappen "surdejsloggen" ind.
+3. Du får et link som https://noget-tilfældigt.netlify.app (det kan omdøbes).
+
+PÅ IPHONE
+1. Åbn linket i Safari.
+2. Tryk Del-knappen → "Føj til hjemmeskærm" → "Tilføj".
+3. Åbn "Surdej" fra hjemmeskærmen og log dine bagninger.
+
+VIGTIGT
+- Bagninger og billeder gemmes kun på telefonen. Brug "Backup" øverst i appen
+  en gang imellem og gem filen i Filer / iCloud Drive.
+- Data i Safari og i appen på hjemmeskærmen er adskilt. Brug appen fra hjemmeskærmen.
+
+NÅR DU LÆGGER EN NY UDGAVE OP
+Erstat filerne og hæv tallet i sw.js (CACHE = "surdejsloggen-v1" → "-v2"),
+så telefonerne henter den nye udgave.
