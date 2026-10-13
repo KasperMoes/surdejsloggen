@@ -153,3 +153,11 @@ grant update (display_name) on public.profiles to authenticated;
 -- Tabel public.comments (migration "comments"): man kan læse og skrive kommentarer på
 -- bagninger, man må se; man kan slette sine egne og alle kommentarer på sine egne bagninger.
 -- Trigger push_on_comment giver ejeren af bagningen en push-besked.
+
+-- ---------- sprødt! (likes) ----------
+-- Tabeller public.bake_likes og public.comment_likes (migration "sprodt_likes").
+-- Trigger push_on_bake_like giver ejeren af bagningen en push-besked.
+
+-- ---------- ret kommentarer ----------
+-- Migration "comments_edit": kolonnen edited_at; man må kun rette body på sine egne
+-- kommentarer; trigger comments_edited sætter edited_at.
