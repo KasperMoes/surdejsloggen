@@ -143,3 +143,8 @@ revoke update on public.friendships from authenticated, anon;
 grant update (status) on public.friendships to authenticated;
 revoke update on public.profiles from authenticated, anon;
 grant update (display_name) on public.profiles to authenticated;
+
+-- ---------- profilbilleder og push-beskeder ----------
+-- (oprettet direkte i Supabase; se migrationen "avatars_and_push").
+-- Hemmelige nøgler (VAPID og hook-secret) ligger i Supabase Vault og er ikke i denne fil.
+-- Edge function "push" sender beskederne: supabase/functions/push/index.ts

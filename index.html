@@ -245,6 +245,17 @@ nav.menu .in{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-widt
 nav.menu button{position:relative;background:none;border:0;padding:9px 4px 11px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem;font-weight:700;color:var(--muted);cursor:pointer}
 nav.menu button svg{width:24px;height:24px}
 nav.menu button[aria-current="page"]{color:var(--accent)}
+nav.menu button.new{color:var(--ink);padding-top:0}
+nav.menu button.new .plus{width:58px;height:58px;margin-top:-24px;border-radius:50%;background:var(--ink);color:#FFFFFF;display:grid;place-items:center;border:4px solid var(--surf);box-shadow:0 6px 16px rgba(42,33,26,.35)}
+nav.menu button.new .plus svg{width:30px;height:30px}
+nav.menu button.new[aria-current="page"]{color:var(--ink)}
+nav.menu button.new[aria-current="page"] .plus{background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){ nav.menu button.new .plus{transition:transform .15s} nav.menu button.new:active .plus{transform:scale(.93)} }
+.av{overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.me label.avpick{position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.7rem;font-weight:700;text-decoration:underline}
+.me label.avpick:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.pushbox{display:flex;flex-direction:column;gap:8px}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surf);padding:10px 16px;border-radius:999px;font-size:.85rem;z-index:50;max-width:90vw;text-align:center}
 </style>
 </head>
@@ -334,7 +345,17 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
 <section id="v-friends" hidden>
   <div class="phead"><h1>Venner</h1><button class="smallbtn" type="button" id="logoutBtn">Log ud</button></div>
   <div class="section">
-    <div class="me"><span class="av" id="meAv"></span><div><b id="meName"></b><div class="meta" id="meUser"></div></div></div>
+    <div class="me">
+      <label class="avpick" for="avatarFile"><span class="av" id="meAv"></span><span id="avLbl">Skift billede</span><input type="file" id="avatarFile" accept="image/*" class="vh"></label>
+      <div><b id="meName"></b><div class="meta" id="meUser"></div></div>
+    </div>
+  </div>
+  <div class="section" id="pushSec">
+    <h2>Notifikationer</h2>
+    <div class="pushbox">
+      <p id="pushTxt" style="margin:0">Få besked, når nogen sender dig en venneanmodning, og når dine venner lægger en ny bagning op.</p>
+      <button class="btn primary" type="button" id="pushBtn">Slå notifikationer til</button>
+    </div>
   </div>
   <div class="section">
     <h2>Find venner</h2>
@@ -448,8 +469,8 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
 <nav class="menu" aria-label="Menu" id="menu" hidden>
   <div class="in">
     <button type="button" data-nav="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6h-6v6H4z"/></svg>Feed</button>
-    <button type="button" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 15c0-4.5 4-8 9-8s9 3.5 9 8v3H3z"/><path d="M8 11l1.5 2M12 10l1 2.3M16 11l1 2"/></svg>Opskrifter</button>
-    <button type="button" data-nav="form"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></svg>Ny bagning</button>
+    <button type="button" data-nav="form" class="new"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Ny bagning</button>
+    <button type="button" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 15c0-4.5 4-8 9-8s9 3.5 9 8v3H3z"/><path d="M8 11l1.5 2M12 10l1 2.3M16 11l1 2"/></svg>Mine bagninger</button>
     <button type="button" data-nav="friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.5"/><path d="M15.5 13.2c3 .2 5.5 2.6 5.5 5.8"/></svg>Venner<span class="badge" id="reqBadge" hidden></span></button>
   </div>
 </nav>
@@ -460,7 +481,9 @@ nav.menu button[aria-current="page"]{color:var(--accent)}
 "use strict";
 const SUPABASE_URL = "https://jldsmespfucvflzaligf.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vAW1RZt9yUyQlEqdUuA1XQ_ksLpSd3P";
+const VAPID_PUBLIC = "BCW0gPPOEjZHQXSGySE0H1qAu4zF2vsuMoaUA30jOjhzGzM2pWNFtXSfdYEahi-7l-4hUn_X4x6PzaqstXaXt5Y";
 const DEMO = location.hash === "#demo";
+const START_HASH = location.hash;
 
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -496,6 +519,8 @@ const picsOf = b => Array.isArray(b.pics) ? b.pics : (b.photo ? [b.photo] : []);
 const keyOf = name => (name||"").trim().toLowerCase() || "\u0000uden";
 const flourText = b => (b.flours||[]).filter(f=>n(f.g)>0).map(f=>`${fmt(f.g)} g ${f.type||"mel"}`).join(" · ");
 const initials = p => ((p && (p.display_name||p.username)) || "?").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2);
+const avatarUrl = path => !path ? "" : /^(data:|blob:|https?:)/.test(path) ? path : `${SUPABASE_URL}/storage/v1/object/public/avatars/${path}`;
+const av = (p, extra="") => p && p.avatar ? `<span class="av"${extra}><img src="${esc(avatarUrl(p.avatar))}" alt=""></span>` : `<span class="av" aria-hidden="true"${extra}>${esc(initials(p))}</span>`;
 const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
 const lsSet = (k,v) => { try{ localStorage.setItem(k,v); }catch(e){} };
 const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
@@ -524,8 +549,8 @@ function realApi(){
     async signOut(){ await sb.auth.signOut(); urlCache.clear(); },
     async updatePassword(password){ const { error } = await sb.auth.updateUser({ password }); fail(error); },
     async usernameAvailable(name){ const { data, error } = await sb.rpc("username_available", { name }); fail(error); return !!data; },
-    async profile(id){ const { data, error } = await sb.from("profiles").select("id,username,display_name").eq("id", id).maybeSingle(); fail(error); return data; },
-    async profiles(ids){ if(!ids.length) return []; const { data, error } = await sb.from("profiles").select("id,username,display_name").in("id", ids); fail(error); return data||[]; },
+    async profile(id){ const { data, error } = await sb.from("profiles").select("id,username,display_name,avatar").eq("id", id).maybeSingle(); fail(error); return data; },
+    async profiles(ids){ if(!ids.length) return []; const { data, error } = await sb.from("profiles").select("id,username,display_name,avatar").in("id", ids); fail(error); return data||[]; },
     async bakes(){ const { data, error } = await sb.from("bakes").select("*").order("date",{ascending:false}).order("created_at",{ascending:false}).limit(500); fail(error); return (data||[]).map(fromRow); },
     async saveBake(b){ const { error } = await sb.from("bakes").upsert(toRow(b)); fail(error); },
     async deleteBake(b){ const { error } = await sb.from("bakes").delete().eq("id", b.id); fail(error); const ps = picsOf(b); if(ps.length) await sb.storage.from("photos").remove(ps); },
@@ -536,18 +561,23 @@ function realApi(){
       if(need.length){ const { data, error } = await sb.storage.from("photos").createSignedUrls(need, 60*60*6); fail(error); (data||[]).forEach(d=>{ if(d.signedUrl) urlCache.set(d.path, d.signedUrl); }); }
       const out = {}; paths.forEach(p=>{ if(urlCache.has(p)) out[p]=urlCache.get(p); }); return out;
     },
-    async searchUsers(q, myId){ const { data, error } = await sb.from("profiles").select("id,username,display_name").ilike("username", q.replace(/[%_]/g,"")+"%").neq("id", myId).order("username").limit(15); fail(error); return data||[]; },
+    async searchUsers(q, myId){ const { data, error } = await sb.from("profiles").select("id,username,display_name,avatar").ilike("username", q.replace(/[%_]/g,"")+"%").neq("id", myId).order("username").limit(15); fail(error); return data||[]; },
     async friendships(){ const { data, error } = await sb.from("friendships").select("*"); fail(error); return data||[]; },
     async request(myId, otherId){ const { error } = await sb.from("friendships").insert({ requester:myId, addressee:otherId }); fail(error); },
     async accept(id){ const { error } = await sb.from("friendships").update({ status:"accepted" }).eq("id", id); fail(error); },
-    async removeFriendship(id){ const { error } = await sb.from("friendships").delete().eq("id", id); fail(error); }
+    async removeFriendship(id){ const { error } = await sb.from("friendships").delete().eq("id", id); fail(error); },
+    async uploadAvatar(path, blob){ const { error } = await sb.storage.from("avatars").upload(path, blob, { contentType:"image/jpeg", upsert:false }); fail(error); },
+    async removeAvatar(path){ if(path) await sb.storage.from("avatars").remove([path]); },
+    async setAvatar(myId, path){ const { error } = await sb.from("profiles").update({ avatar:path }).eq("id", myId); fail(error); },
+    async savePush(s){ await sb.from("push_subscriptions").delete().eq("endpoint", s.endpoint); const { error } = await sb.from("push_subscriptions").insert(s); fail(error); },
+    async deletePush(endpoint){ await sb.from("push_subscriptions").delete().eq("endpoint", endpoint); }
   };
 }
 
 function demoApi(){
-  const me = { id:"u1", username:"kasper", display_name:"Kasper" };
-  const people = [me, {id:"u2",username:"mette.bager",display_name:"Mette Holm"}, {id:"u3",username:"jonas_rug",display_name:"Jonas"}, {id:"u4",username:"sofie",display_name:"Sofie Lund"}, {id:"u5",username:"sofus",display_name:"Sofus"}];
   const pic = (c1,c2) => { const cv=document.createElement("canvas"); cv.width=800; cv.height=600; const x=cv.getContext("2d"); x.fillStyle="#E7DCCB"; x.fillRect(0,0,800,600); x.fillStyle=c2; x.beginPath(); x.ellipse(400,320,300,200,0,0,7); x.fill(); x.fillStyle=c1; x.beginPath(); x.ellipse(400,310,280,180,0,0,7); x.fill(); x.strokeStyle="#F4EDE1"; x.lineWidth=18; x.lineCap="round"; for(let i=0;i<3;i++){ x.beginPath(); x.moveTo(280+i*110,380); x.lineTo(350+i*110,230); x.stroke(); } return cv.toDataURL("image/jpeg",.8); };
+  const me = { id:"u1", username:"kasper", display_name:"Kasper" };
+  const people = [me, {id:"u2",username:"mette.bager",display_name:"Mette Holm",avatar:pic("#D9A86A","#8E5A2C")}, {id:"u3",username:"jonas_rug",display_name:"Jonas"}, {id:"u4",username:"sofie",display_name:"Sofie Lund"}, {id:"u5",username:"sofus",display_name:"Sofus"}];
   const imgs = { "d/1":pic("#C98A4B","#7A4A20"), "d/2":pic("#B9773A","#6B3E18"), "d/3":pic("#D9A86A","#8E5A2C"), "d/4":pic("#A86A33","#5A3414") };
   let friends = [{id:1,requester:"u1",addressee:"u2",status:"accepted"},{id:2,requester:"u3",addressee:"u1",status:"accepted"},{id:3,requester:"u4",addressee:"u1",status:"pending"}], fid=10;
   let rows = [
@@ -576,7 +606,11 @@ function demoApi(){
     async friendships(){ return friends.slice(); },
     async request(a,b){ friends.push({id:fid++,requester:a,addressee:b,status:"pending"}); },
     async accept(id){ friends.find(f=>f.id===id).status="accepted"; },
-    async removeFriendship(id){ friends=friends.filter(f=>f.id!==id); }
+    async removeFriendship(id){ friends=friends.filter(f=>f.id!==id); },
+    async uploadAvatar(path, blob){ imgs["av:"+path]=URL.createObjectURL(blob); },
+    async removeAvatar(){},
+    async setAvatar(id, path){ const p=people.find(x=>x.id===id); p.avatar=imgs["av:"+path]; },
+    async savePush(){}, async deletePush(){}
   };
 }
 const api = DEMO ? demoApi() : realApi();
@@ -683,7 +717,87 @@ $("#forgotBtn").onclick = async ()=>{
   if(!email){ err.textContent="Skriv din e-mail først, så sender vi et link."; err.hidden=false; return; }
   try{ await api.reset(email); ok.textContent="Vi har sendt et link til at nulstille din adgangskode."; ok.hidden=false; }catch(ex){ err.textContent=authErrText(ex); err.hidden=false; }
 };
-$("#logoutBtn").onclick = async ()=>{ await api.signOut(); };
+$("#logoutBtn").onclick = async ()=>{ await disablePush(true); await api.signOut(); };
+
+/* ---------- profile picture ---------- */
+async function squareJpeg(file, size){
+  const bmp = await createImageBitmap(file, {imageOrientation:"from-image"});
+  const s = Math.min(bmp.width, bmp.height);
+  const cv = document.createElement("canvas"); cv.width = cv.height = size;
+  cv.getContext("2d").drawImage(bmp, (bmp.width-s)/2, (bmp.height-s)/2, s, s, 0, 0, size, size);
+  return await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/jpeg",0.86));
+}
+$("#avatarFile").addEventListener("change", async e=>{
+  const f = e.target.files && e.target.files[0]; e.target.value=""; if(!f) return;
+  const lbl=$("#avLbl"); lbl.textContent="Uploader…";
+  try{
+    const blob = await squareJpeg(f, 400);
+    const path = `${me.id}/${Date.now().toString(36)}.jpg`, old = me.avatar;
+    await api.uploadAvatar(path, blob);
+    await api.setAvatar(me.id, path);
+    if(!DEMO){ me.avatar = path; api.removeAvatar(old).catch(()=>{}); } else { me = people.get(me.id) || me; }
+    people.set(me.id, me); renderFriends(); toast("Dit profilbillede er opdateret.");
+  }catch(ex){ lbl.textContent="Skift billede"; toast("Billedet kunne ikke uploades. Prøv igen."); }
+});
+
+/* ---------- push notifications ---------- */
+const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const b64ToBytes = b64 => { const p = "=".repeat((4 - b64.length % 4) % 4); const raw = atob((b64 + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from(raw, c=>c.charCodeAt(0)); };
+async function currentSub(){ if(!pushSupported()) return null; const reg = await navigator.serviceWorker.getRegistration(); return reg ? await reg.pushManager.getSubscription() : null; }
+async function enablePush(){
+  if(!pushSupported()) return false;
+  const perm = await Notification.requestPermission();
+  if(perm !== "granted") return false;
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: b64ToBytes(VAPID_PUBLIC) });
+  const j = sub.toJSON();
+  await api.savePush({ user_id: me.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth });
+  lsSet("pushAsked","1");
+  return true;
+}
+async function disablePush(quiet){
+  try{ const sub = await currentSub(); if(sub){ await api.deletePush(sub.endpoint); await sub.unsubscribe(); } }catch(e){ if(!quiet) toast("Kunne ikke slå notifikationer fra."); }
+}
+async function renderPush(){
+  const txt=$("#pushTxt"), btn=$("#pushBtn");
+  if(DEMO){ btn.hidden=false; return; }
+  if(!pushSupported()){
+    txt.textContent = /iPhone|iPad/.test(navigator.userAgent) && !isStandalone()
+      ? "På iPhone virker notifikationer kun, når appen er lagt på hjemmeskærmen. Åbn den derfra for at slå dem til."
+      : "Notifikationer virker ikke i denne browser. På iPhone kræver det iOS 16.4 eller nyere, og at appen er lagt på hjemmeskærmen.";
+    btn.hidden=true; return;
+  }
+  if(Notification.permission==="denied"){ txt.textContent="Notifikationer er slået fra for Surdej. Slå dem til under Indstillinger → Notifikationer → Surdej på telefonen."; btn.hidden=true; return; }
+  const sub = await currentSub().catch(()=>null);
+  btn.hidden=false;
+  if(sub && Notification.permission==="granted"){ txt.textContent="Notifikationer er slået til på denne telefon. Du får besked om venneanmodninger og nye bagninger fra dine venner."; btn.textContent="Slå notifikationer fra"; btn.className="btn"; btn.dataset.on="1"; }
+  else { txt.textContent="Få besked, når nogen sender dig en venneanmodning, og når dine venner lægger en ny bagning op."; btn.textContent="Slå notifikationer til"; btn.className="btn primary"; btn.dataset.on=""; }
+}
+$("#pushBtn").onclick = async ()=>{
+  const btn=$("#pushBtn"); btn.disabled=true;
+  try{
+    if(btn.dataset.on){ await disablePush(); toast("Notifikationer er slået fra."); }
+    else if(await enablePush()) toast("Notifikationer er slået til.");
+    else toast("Notifikationer blev ikke slået til.");
+  }catch(e){ toast("Det lykkedes ikke at slå notifikationer til. Prøv igen."); }
+  btn.disabled=false; renderPush();
+};
+async function pushBanner(){
+  const box=$("#migrateBox");
+  if(DEMO || !pushSupported() || Notification.permission!=="default" || lsGet("pushAsked") || box.querySelector(".pushask")) return;
+  const el=document.createElement("div"); el.className="banner pushask";
+  el.innerHTML=`<p><b>Vil du have besked, når dine venner bager?</b> Du får også besked om nye venneanmodninger.</p><div class="actions"><button class="btn primary" type="button" data-pyes>Slå notifikationer til</button><button class="btn" type="button" data-pno>Ikke nu</button></div>`;
+  box.appendChild(el);
+  el.querySelector("[data-pno]").onclick=()=>{ lsSet("pushAsked","1"); el.remove(); };
+  el.querySelector("[data-pyes]").onclick=async()=>{ try{ toast(await enablePush() ? "Notifikationer er slået til." : "Notifikationer blev ikke slået til."); }catch(e){ toast("Det lykkedes ikke. Prøv under Venner."); } lsSet("pushAsked","1"); el.remove(); };
+}
+if("serviceWorker" in navigator){ navigator.serviceWorker.addEventListener("message", e=>{ if(e.data && e.data.type==="open" && me){ goHash(e.data.url||""); } }); }
+function goHash(url){
+  const h = String(url).split("#")[1]||"";
+  if(h==="venner"){ backTo="friends"; show("friends"); renderFriends(); }
+  else { backTo="feed"; show("feed"); loadAll().then(renderFeed).catch(()=>renderFeed()); }
+}
 $("#newPassBtn").onclick = async ()=>{
   const pw=$("#newPass").value, msg=$("#newPassMsg"); msg.hidden=false;
   if(pw.length<6){ msg.className="err"; msg.textContent="Adgangskoden skal være på mindst 6 tegn."; return; }
@@ -703,7 +817,10 @@ async function enter(session){
     await loadAll();
   }catch(e){ toast("Kunne ikke hente data. Tjek din forbindelse."); }
   entering = false;
-  backTo="feed"; show("feed"); renderFeed(); checkMigration();
+  if(START_HASH==="#venner"){ backTo="friends"; show("friends"); renderFriends(); }
+  else { backTo="feed"; show("feed"); renderFeed(); }
+  if(START_HASH && !DEMO) try{ history.replaceState(null,"",location.pathname); }catch(e){}
+  await checkMigration(); pushBanner();
 }
 function leave(){ me=null; bakes=[]; friendships=[]; people=new Map(); show("auth"); }
 
@@ -721,7 +838,7 @@ function renderFeed(){
     const p = personOf(b.user_id), c = calc(b);
     const tick = [kindName(b.kind), Math.round(c.flourG)+" g mel", b.time?b.time+" min":"", ovenLabel(b.ovenMode)].filter(Boolean);
     return `<article class="post">
-      <div class="who"><span class="av" aria-hidden="true">${esc(initials(p))}</span><span class="nm"><b>${esc(b.user_id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)} · ${esc(shortDate(b.date))}</small></span>
+      <div class="who">${av(p)}<span class="nm"><b>${esc(b.user_id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)} · ${esc(shortDate(b.date))}</small></span>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
       ${galleryHtml(picsOf(b), b.name||"bagningen")}
       <button class="pbody" type="button" data-bake="${esc(b.id)}"><span class="ptitle">${esc(b.name||"Uden navn")}</span>${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}<span class="ticket">${tick.map(t=>`<span>${esc(t)}</span>`).join("")}</span></button>
@@ -827,7 +944,7 @@ function openBake(id){
       ${ps.length>1?`<span class="count">1 / ${ps.length}</span>`:""}
     </div>
     <div class="sheet">
-      ${own?"":`<div class="byline"><span class="av" aria-hidden="true">${esc(initials(p))}</span><span><b>${esc(nameOf(p))}</b> <span class="muted">@${esc(p.username)}</span></span></div>`}
+      ${own?"":`<div class="byline">${av(p)}<span><b>${esc(nameOf(p))}</b> <span class="muted">@${esc(p.username)}</span></span></div>`}
       <div class="titlerow"><div><h1>${esc(b.name||"Uden navn")}</h1><div class="meta">${kindName(b.kind)} · ${esc(dateFmt(b.date))}</div></div>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</div>
       ${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}
@@ -875,7 +992,7 @@ async function doSearch(q){
     const state = !f ? `<button class="btn sm primary" type="button" data-req="${esc(p.id)}">Tilføj</button>`
       : f.status==="accepted" ? `<span class="meta">Venner</span>`
       : f.requester===me.id ? `<span class="meta">Anmodet</span>` : `<button class="btn sm primary" type="button" data-acc="${f.id}">Godkend</button>`;
-    return `<div class="row"><span class="av">${esc(initials(p))}</span><span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${state}</span></div>`;
+    return `<div class="row">${av(p)}<span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${state}</span></div>`;
   }).join("") : '<p class="muted" style="margin:0">Ingen brugere fundet.</p>';
   wireFriendButtons(box, ()=>doSearch(q));
 }
@@ -888,9 +1005,9 @@ function wireFriendButtons(root, after){
 }
 function renderFriends(){
   if(!me) return;
-  $("#meAv").textContent = initials(me); $("#meName").textContent = nameOf(me) || "Dig"; $("#meUser").textContent = "@"+me.username;
+  $("#meAv").innerHTML = me.avatar ? `<img src="${esc(avatarUrl(me.avatar))}" alt="Dit profilbillede">` : esc(initials(me)); $("#avLbl").textContent = me.avatar ? "Skift billede" : "Tilføj billede"; $("#meName").textContent = nameOf(me) || "Dig"; $("#meUser").textContent = "@"+me.username;
   const other = f => personOf(f.requester===me.id ? f.addressee : f.requester);
-  const row = (p, acts) => `<div class="row"><span class="av">${esc(initials(p))}</span><span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${acts}</span></div>`;
+  const row = (p, acts) => `<div class="row">${av(p)}<span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${acts}</span></div>`;
   const inc = friendships.filter(f=>f.status==="pending"&&f.addressee===me.id);
   const out = friendships.filter(f=>f.status==="pending"&&f.requester===me.id);
   const acc = friendships.filter(f=>f.status==="accepted");
@@ -901,7 +1018,7 @@ function renderFriends(){
   $("#noFriends").hidden = acc.length>0;
   $("#friendRows").innerHTML = acc.map(f=>row(other(f), `<button class="btn sm danger" type="button" data-rm="${f.id}" data-label="Fjern" data-confirm="Sikker?">Fjern</button>`)).join("");
   wireFriendButtons($("#v-friends"));
-  updateBadge();
+  updateBadge(); renderPush();
 }
 
 /* ---------- form ---------- */
