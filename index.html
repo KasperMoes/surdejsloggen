@@ -80,7 +80,9 @@ a{color:inherit}
 .tile{display:flex;flex-direction:column;gap:6px;background:none;border:0;padding:0;text-align:left;cursor:pointer;min-width:0}
 .tile .pic{display:block;position:relative;aspect-ratio:3/4;max-height:240px;width:100%;border-radius:14px;overflow:hidden;box-shadow:3px 3px 0 var(--ink);background:var(--ph)}
 .tile .pic img,.tile .pic .noimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.chip{position:absolute;top:10px;left:10px;background:var(--surf);border-radius:999px;padding:3px 9px;font-size:.7rem;font-weight:700}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:-4px}
+.pills button{border:1px solid var(--line);background:var(--surf);border-radius:999px;padding:6px 11px;font-size:.8rem;cursor:pointer}
+.pills button[aria-pressed="true"]{background:var(--ink);color:var(--surf);border-color:var(--ink)}
 .stamp{display:inline-block;border:2px solid var(--stamp);color:var(--stamp);background:var(--surf);padding:0 5px;font-weight:700;transform:rotate(var(--rot,-4deg));white-space:nowrap;line-height:1.35}
 .tile .stamp{position:absolute;bottom:10px;right:10px}
 .tile b{font:900 1.3rem/1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
@@ -421,7 +423,7 @@ nav.menu button.new[aria-current="page"] .plus{background:#93361F}
       </div>
     </fieldset>
     <fieldset>
-      <legend>Tider &amp; ovn</legend>
+      <legend>Tider, ovn &amp; foldemetode</legend>
       <div class="g3">
         <label class="f" for="f-bulk">Hævning <span class="u">t</span><input type="number" inputmode="decimal" id="f-bulk" min="0" step="0.25"></label>
         <label class="f" for="f-cold">Køleskab <span class="u">t</span><input type="number" inputmode="decimal" id="f-cold" min="0" step="0.5"></label>
@@ -434,6 +436,14 @@ nav.menu button.new[aria-current="page"] .plus{background:#93361F}
           <button type="button" data-oven="varmluft" aria-pressed="false">Varmluft</button>
           <button type="button" data-oven="overunder" aria-pressed="false">Over-/undervarme</button>
         </div>
+      </div>
+      <label class="f" for="f-surface">Bagt på <span class="u">vælg eller skriv selv</span><input type="text" id="f-surface" autocomplete="off" placeholder="fx pizzasten"></label>
+      <div class="pills" data-fill="f-surface">
+        <button type="button">Pizzasten</button><button type="button">Bagestål</button><button type="button">Støbejernsgryde</button><button type="button">Bageplade</button><button type="button">Brødform</button>
+      </div>
+      <label class="f" for="f-fold">Foldemetode <span class="u">vælg eller skriv selv</span><input type="text" id="f-fold" autocomplete="off" placeholder="fx stretch &amp; fold"></label>
+      <div class="pills" data-fill="f-fold">
+        <button type="button">Stretch &amp; fold</button><button type="button">Coil fold</button><button type="button">Laminering</button><button type="button">Slap &amp; fold</button><button type="button">Ingen foldning</button>
       </div>
     </fieldset>
     <fieldset>
@@ -528,7 +538,7 @@ const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slic
 let toastT; function toast(msg){ let t=$(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); document.body.appendChild(t); } t.textContent=msg; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),2600); }
 
 /* ---------- backend ---------- */
-const DATA_KEYS = ["flours","water","salt","starter","extras","bulk","cold","proof","temp","time","ovenMode","rise","crumb","crust","taste","notes","created"];
+const DATA_KEYS = ["flours","water","salt","starter","extras","bulk","cold","proof","temp","time","ovenMode","bakedOn","foldMethod","rise","crumb","crust","taste","notes","created"];
 const toRow = b => { const data={}; DATA_KEYS.forEach(k=>{ if(b[k]!==undefined) data[k]=b[k]; });
   return { id:b.id, user_id:b.user_id, date:b.date, name:b.name||"", kind:b.kind||"bread", overall:n(b.overall)|0, caption:b.caption||"", pics:picsOf(b), data, updated_at:new Date().toISOString() }; };
 const fromRow = r => ({ ...(r.data||{}), id:r.id, user_id:r.user_id, date:r.date, name:r.name, kind:r.kind, overall:r.overall, caption:r.caption, pics:r.pics||[], created:(r.data&&r.data.created)||Date.parse(r.created_at)||0 });
@@ -836,7 +846,7 @@ function renderFeed(){
   const box = $("#feedList");
   box.innerHTML = list.map(b=>{
     const p = personOf(b.user_id), c = calc(b);
-    const tick = [kindName(b.kind), Math.round(c.flourG)+" g mel", b.time?b.time+" min":"", ovenLabel(b.ovenMode)].filter(Boolean);
+    const tick = [kindName(b.kind), Math.round(c.flourG)+" g mel", b.time?b.time+" min":"", ovenLabel(b.ovenMode), b.bakedOn||""].filter(Boolean);
     return `<article class="post">
       <div class="who">${av(p)}<span class="nm"><b>${esc(b.user_id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)} · ${esc(shortDate(b.date))}</small></span>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
@@ -888,7 +898,6 @@ function renderHome(){
   grid.innerHTML = list.map(r=>`
     <button class="tile" type="button" data-recipe="${esc(r.key)}">
       <span class="pic">${r.cover?img(r.cover,"Billede af "+r.name):noimg()}
-        <span class="chip">${r.bakes.length} ${r.bakes.length===1?"bagning":"bagninger"}</span>
         ${r.avg?`<span class="stamp" style="--rot:${rot(r.key)}deg" aria-label="Gennemsnit ${dec(r.avg)} stjerner">${dec(r.avg)}</span>`:""}
       </span>
       <b>${esc(r.name)}</b><span class="when">Senest ${esc(shortDate(r.latest))}</span>
@@ -952,7 +961,8 @@ function openBake(id){
         <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 9h12l-1 11H7z"/><path d="M9 9V6a3 3 0 016 0v3"/></svg><span><b>${Math.round(c.flourG)} g mel</b>${esc(flourText(b))}</span></div>
         <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 01-12 0c0-3.5 3-7 6-11z"/></svg><span><b>${fmt(b.water)} g vand · ${fmt(b.starter)} g surdej · ${fmt(b.salt)} g salt</b>Hydrering ${pct(c.hyd)} · surdej ${pct(c.ino)} · salt ${pct(c.salt)}${b.extras?"<br>Ekstra: "+esc(b.extras):""}</span></div>
         ${times.length?`<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l3 2M9 3h6"/></svg><span><b>${times[0]}</b>${times.slice(1).join(" · ")}</span></div>`:""}
-        ${b.temp||b.time?`<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M7 9h10M8 15h8"/></svg><span><b>${b.temp?fmt(b.temp)+" °C":""}${b.temp&&b.time?" i ":""}${b.time?fmt(b.time)+" min":""}</b>${ovenLabel(b.ovenMode)}</span></div>`:""}
+        ${b.temp||b.time||b.bakedOn?`<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M7 9h10M8 15h8"/></svg><span><b>${b.temp?fmt(b.temp)+" °C":""}${b.temp&&b.time?" i ":""}${b.time?fmt(b.time)+" min":""}</b>${[ovenLabel(b.ovenMode), b.bakedOn?"Bagt på "+esc(b.bakedOn.toLowerCase()):""].filter(Boolean).join(" · ")}</span></div>`:""}
+        ${b.foldMethod?`<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h10l3 3-3 3H4"/></svg><span><b>Foldemetode</b>${esc(b.foldMethod)}</span></div>`:""}
       </div>
       ${sub.length?`<div class="subr">${sub.map(s=>`<span>${s[0]} <span class="stars">${stars(s[1])}</span></span>`).join("")}</div>`:""}
       ${b.notes?`<div class="notes"><small>Noter til næste gang</small>${esc(b.notes)}</div>`:""}
@@ -1044,12 +1054,18 @@ $$("[data-kind]").forEach(b=>b.onclick=()=>{ kind=b.dataset.kind; $$("[data-kind
 function setOven(m){ ovenMode=m||""; $$("[data-oven]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.oven===ovenMode))); }
 $$("[data-oven]").forEach(b=>b.onclick=()=>setOven(ovenMode===b.dataset.oven?"":b.dataset.oven));
 ["f-water","f-salt","f-starter"].forEach(id=>$("#"+id).addEventListener("input",updateCalc));
+function syncPills(){ $$(".pills").forEach(g=>{ const v=$("#"+g.dataset.fill).value.trim().toLowerCase(); g.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.textContent.trim().toLowerCase()===v))); }); }
+$$(".pills").forEach(g=>{
+  const inp=$("#"+g.dataset.fill);
+  g.querySelectorAll("button").forEach(b=>b.onclick=()=>{ inp.value = b.getAttribute("aria-pressed")==="true" ? "" : b.textContent.trim(); syncPills(); });
+  inp.addEventListener("input", syncPills);
+});
 function readForm(){
   const flours=$$(".flourrow").map(r=>({type:r.querySelector(".ft").value.trim(), g:n(r.querySelector(".fg").value)})).filter(f=>f.type||f.g);
   const v=id=>{ const x=$("#"+id).value; return x===""?null:n(x); };
   return { date:$("#f-date").value, kind, name:$("#f-name").value.trim(), flours,
     water:v("f-water"), salt:v("f-salt"), starter:v("f-starter"), extras:$("#f-extras").value.trim(),
-    bulk:v("f-bulk"), cold:v("f-cold"), proof:v("f-proof"), temp:v("f-temp"), time:v("f-time"), ovenMode,
+    bulk:v("f-bulk"), cold:v("f-cold"), proof:v("f-proof"), temp:v("f-temp"), time:v("f-time"), ovenMode, bakedOn:$("#f-surface").value.trim(), foldMethod:$("#f-fold").value.trim(),
     overall:ratings.overall||0, rise:ratings.rise||0, crumb:ratings.crumb||0, crust:ratings.crust||0, taste:ratings.taste||0,
     notes:$("#f-notes").value.trim(), caption:$("#f-caption").value.trim() };
 }
@@ -1091,7 +1107,7 @@ function openForm(b, asNew){
   $("#flours").innerHTML=""; (src.flours&&src.flours.length?src.flours:[{}]).forEach(f=>$("#flours").appendChild(flourRow(f)));
   const set=(id,val)=>{ $("#"+id).value = val===null||val===undefined?"":val; };
   set("f-water",src.water); set("f-salt",src.salt); set("f-starter",src.starter); set("f-extras",src.extras);
-  set("f-bulk",src.bulk); set("f-cold",src.cold); set("f-proof",src.proof); set("f-temp",src.temp); set("f-time",src.time);
+  set("f-bulk",src.bulk); set("f-cold",src.cold); set("f-proof",src.proof); set("f-temp",src.temp); set("f-time",src.time); set("f-surface",src.bakedOn); set("f-fold",src.foldMethod); syncPills();
   ratings = editing ? {overall:b.overall,rise:b.rise,crumb:b.crumb,crust:b.crust,taste:b.taste} : {};
   set("f-notes", editing ? b.notes : ""); set("f-caption", editing ? b.caption : "");
   setPics(editing ? picsOf(b).map(id=>({id})) : []);
