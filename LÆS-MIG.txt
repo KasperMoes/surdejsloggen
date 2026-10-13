@@ -21,7 +21,7 @@ MULIGHED B: NETLIFY (gratis)
 PÅ IPHONE
 1. Åbn linket i Safari.
 2. Tryk Del-knappen → "Føj til hjemmeskærm" → "Tilføj".
-3. Åbn "Surdej" fra hjemmeskærmen og log dine bagninger.
+3. Åbn "Surdejsloggen" fra hjemmeskærmen og log dine bagninger.
 
 VIGTIGT
 - Bagninger og billeder gemmes kun på telefonen. Brug "Backup" øverst i appen
@@ -29,5 +29,5 @@ VIGTIGT
 - Data i Safari og i appen på hjemmeskærmen er adskilt. Brug appen fra hjemmeskærmen.
 
 NÅR DU LÆGGER EN NY UDGAVE OP
-Erstat filerne og hæv tallet i sw.js (CACHE = "surdejsloggen-v7" → "-v8"),
+Erstat filerne og hæv tallet i sw.js (CACHE = "surdejsloggen-v8" → "-v9"),
 så telefonerne henter den nye udgave.
