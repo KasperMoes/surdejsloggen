@@ -5,412 +5,375 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Surdejsloggen</title>
 <meta name="description" content="Bagejournal til surdejsbrød og -boller.">
-<meta name="theme-color" content="#C7A47A">
+<meta name="theme-color" content="#EFE9DF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Surdej">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preload" href="fonts/courier-prime-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/big-shoulders-display-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face{font-family:"Big Shoulders Display";font-weight:700;font-display:swap;src:url("fonts/big-shoulders-display-latin-700-normal.woff2") format("woff2")}
 @font-face{font-family:"Big Shoulders Display";font-weight:900;font-display:swap;src:url("fonts/big-shoulders-display-latin-900-normal.woff2") format("woff2")}
 @font-face{font-family:"Courier Prime";font-weight:400;font-display:swap;src:url("fonts/courier-prime-latin-400-normal.woff2") format("woff2")}
 @font-face{font-family:"Courier Prime";font-weight:700;font-display:swap;src:url("fonts/courier-prime-latin-700-normal.woff2") format("woff2")}
-[hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-img{max-width:100%}
 
-/* Layout: bagejournal på brunt bagerpapir. Ét bevidst lyst look (ingen mørk variant): kraftpapir, sort blæk, rødt stempel. */
+/* Layout: 7a "Mel & creme" – søgepille og ikonfaner øverst, opskrifter som store fliser i to kolonner, fast menu i bunden. Ét lyst look. */
 :root{
-  --bg:#C7A47A; --surface:#F1E6D2; --ink:#1C1712; --muted:#4A3826; --line:#B9976C;
-  --accent:#8C2F1E; --accent-ink:#F1E6D2; --accent-soft:#E8D9BE;
-  --bread:#8C2F1E; --buns:#2F4A3A; --good:#2F4A3A; --warn:#8A5A12; --bad:#8C2F1E;
-  --display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
-  --body:"Courier Prime", "Courier New", ui-monospace, monospace;
-  --mono:"Courier Prime", "Courier New", ui-monospace, monospace;
-  --r:0px;
+  --bg:#EFE9DF; --surf:#FFFFFF; --ink:#2A211A; --muted:#5E4E3E; --line:rgba(42,33,26,.18); --soft:rgba(42,33,26,.12);
+  --stamp:#B5452A; --ph:#E2D6C2; --accent:#B5452A; --good:#3E6B45;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Courier Prime","Courier New",ui-monospace,monospace;
   color-scheme:light;
 }
-
 *{box-sizing:border-box}
-html,body{background:var(--bg)}
-body{color:var(--ink);font:15px/1.5 var(--body);padding-inline:16px;padding-block:0 96px;max-width:640px;margin:0 auto}
-h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;background:var(--bg)}
+body{margin:0 auto;max-width:640px;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+img{max-width:100%}
+h1,h2,h3{font-family:var(--display);font-weight:900;text-transform:uppercase;margin:0;line-height:1;text-wrap:balance}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+a{color:inherit}
+.wrap{padding-inline:16px}
 
-header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
-header.top h1{font-size:1.45rem;font-weight:800;letter-spacing:-.02em}
-header.top .sub{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+/* ---------- splash ---------- */
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .45s ease}
+#splash svg{width:132px;height:132px}
+#splash .word{font:900 2.6rem/0.9 var(--display);text-transform:uppercase;letter-spacing:.01em}
+#splash .sub{font-size:.75rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
+#splash.out{opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){
+  #splash svg{animation:pop .6s cubic-bezier(.2,.9,.3,1.3) both}
+  #splash .word,#splash .sub{animation:rise .5s .2s ease both}
+}
+@keyframes pop{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
 
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
-nav.tabs .in{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:640px}
-nav.tabs button{background:none;border:0;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer}
-nav.tabs button svg{width:22px;height:22px}
-nav.tabs button[aria-selected="true"]{color:var(--accent)}
-nav.tabs button.new span.plus{background:var(--accent);color:var(--accent-ink);border-radius:999px;width:34px;height:34px;display:grid;place-items:center;margin-top:-4px}
-nav.tabs button.new span.plus svg{width:20px;height:20px}
+/* ---------- top (search + tabs) ---------- */
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0;display:flex;flex-direction:column;gap:14px}
+.search{display:flex;align-items:center;gap:10px;background:var(--surf);border-radius:999px;padding:10px 18px;box-shadow:0 3px 10px var(--soft)}
+.search svg{width:18px;height:18px;flex:none}
+.search label{display:flex;flex-direction:column;flex:1;min-width:0}
+.search b{font-size:.9rem}
+.search input{border:0;background:transparent;padding:0;font-size:16px;outline:none;min-width:0;color:var(--ink)}
+.search input::placeholder{color:#6B5A48}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 6px 10px;border:0;background:none;font-size:.75rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab svg{width:24px;height:24px}
+.tab[aria-pressed="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+.tab select{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:16px}
+.sortlbl{font-size:.75rem;color:var(--muted);padding:8px 16px 0}
 
-section.view{padding-block:16px;display:flex;flex-direction:column;gap:14px}
-.filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.sortsel{margin-left:auto;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:.85rem;cursor:pointer}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:.85rem;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* ---------- recipe tiles ---------- */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 14px;padding:14px 16px 8px}
+.tile{display:flex;flex-direction:column;gap:6px;background:none;border:0;padding:0;text-align:left;cursor:pointer;min-width:0}
+.tile .pic{display:block;position:relative;aspect-ratio:3/4;max-height:240px;width:100%;border-radius:14px;overflow:hidden;box-shadow:3px 3px 0 var(--ink);background:var(--ph)}
+.tile .pic img,.tile .pic .noimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.chip{position:absolute;top:10px;left:10px;background:var(--surf);border-radius:999px;padding:3px 9px;font-size:.7rem;font-weight:700}
+.stamp{display:inline-block;border:2px solid var(--stamp);color:var(--stamp);background:var(--surf);padding:0 5px;font-weight:700;transform:rotate(var(--rot,-4deg));white-space:nowrap;line-height:1.35}
+.tile .stamp{position:absolute;bottom:10px;right:10px}
+.tile b{font:900 1.3rem/1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.tile span.when{font-size:.75rem;color:var(--muted);margin-top:-3px}
+.tile.add .pic{box-shadow:none;background:transparent;border:2px dashed var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700}
+.noimg{display:flex;align-items:center;justify-content:center;background:var(--ph)}
+.noimg svg{width:48%;max-width:110px;opacity:.9}
+.empty{margin:28px 16px;padding:22px 18px;background:var(--surf);border-radius:14px;box-shadow:3px 3px 0 var(--ink);text-align:center}
+.empty h2{font-size:1.6rem;margin-bottom:8px}
+.empty p{margin:0 0 14px}
 
-/* bake list */
-.bakes{display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
-.bake{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;cursor:pointer;text-align:left;width:100%}
-.bake:hover{border-color:var(--muted)}
-.bake .name{font-family:var(--display);font-weight:700;font-size:1.05rem;min-width:0;overflow-wrap:anywhere}
-.bake .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.8rem;color:var(--muted)}
-.bake .meta b{color:var(--ink);font-weight:500}
-.kind{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-.kind::before{content:"";width:8px;height:8px;border-radius:2px;background:currentColor}
-.kind.bread{color:var(--bread)} .kind.buns{color:var(--buns)}
-.tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;border:1px dashed var(--muted);color:var(--muted);border-radius:4px;padding:0 5px}
-.flourbar{grid-column:1/-1;display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--line);margin-top:4px}
-.flourbar span{display:block;height:100%}
-.stars{color:var(--accent);letter-spacing:1px;white-space:nowrap;font-size:1rem}
-.stars .off{color:var(--line)}
+/* ---------- buttons ---------- */
+.btn{border:2px solid var(--ink);background:var(--surf);border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:var(--surf)}
+.btn.danger{color:var(--stamp);border-color:var(--stamp)}
+.btn.danger.armed{background:var(--stamp);color:#fff}
+.linkbtn{background:none;border:0;padding:4px 0;font-weight:700;text-decoration:underline;cursor:pointer}
+.circle{position:absolute;width:38px;height:38px;border-radius:50%;border:0;background:var(--surf);box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.circle svg{width:16px;height:16px}
 
-.empty{background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:24px 18px;text-align:center;color:var(--muted)}
-.empty h2{color:var(--ink);font-size:1.15rem;margin-bottom:6px}
-
-/* form */
-form{display:flex;flex-direction:column;gap:18px}
-fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-legend{font-family:var(--display);font-weight:700;font-size:1.05rem;margin-bottom:8px;padding:0}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media (max-width:380px){.grid3{grid-template-columns:1fr 1fr}}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted);font-weight:600;min-width:0}
-label.f .u{font-weight:400}
-input[type=text],input[type=number],input[type=date],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0;font-size:16px}
-input[type=number]{font-family:var(--mono)}
-textarea{min-height:70px;resize:vertical}
-.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:var(--surface);padding:9px;cursor:pointer;font-weight:600}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.flourrow{display:grid;grid-template-columns:1fr 92px 36px;gap:8px;align-items:center}
-.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;height:40px;cursor:pointer;color:var(--muted);display:grid;place-items:center}
-.linkbtn{background:none;border:0;color:var(--accent);font-weight:600;cursor:pointer;padding:4px 0;align-self:flex-start}
-.calc{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.calc div{display:flex;flex-direction:column;min-width:0}
-.calc small{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.calc strong{font-family:var(--mono);font-size:1.05rem;font-weight:500}
-.raterow{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.raterow span{font-size:.88rem;font-weight:600}
-.rate{display:flex;gap:2px}
-.rate button{background:none;border:0;font-size:1.6rem;line-height:1;cursor:pointer;color:var(--line);padding:2px}
-.rate button.on{color:var(--accent)}
-.rate.small button{font-size:1.25rem}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 16px;font-weight:600;cursor:pointer}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);flex:1}
-.btn.danger{color:var(--bad)}
-.btn.danger.armed{background:var(--bad);color:var(--surface);border-color:var(--bad)}
-.err{color:var(--bad);font-size:.85rem}
-
-/* detail sheet */
-.detail{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px}
-.detail h2{font-size:1.4rem}
-.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.kv div{display:flex;flex-direction:column}
-.kv small{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.kv strong{font-family:var(--mono);font-weight:500}
-table.fl{width:100%;border-collapse:collapse;font-size:.9rem}
-table.fl td{padding:5px 0;border-bottom:1px solid var(--line)}
-table.fl td.r{text-align:right;font-family:var(--mono)}
-.notes{white-space:pre-wrap;font-size:.92rem}
-
-/* insights */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
-.card h3{font-size:1.02rem}
-.card p.hint{margin:0;font-size:.82rem;color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stats div{display:flex;flex-direction:column}
-.stats strong{font-family:var(--display);font-size:1.6rem;font-weight:800;line-height:1}
-.stats small{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:4px}
-.bars{display:flex;flex-direction:column;gap:8px}
-.barrow{display:grid;grid-template-columns:minmax(0,7.5rem) 1fr 3.4rem;gap:10px;align-items:center;font-size:.86rem}
-.barrow .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.barrow .track{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
-.barrow .fill{height:100%;background:var(--accent);border-radius:5px}
-.barrow .val{font-family:var(--mono);text-align:right;font-size:.82rem}
-.barrow .val small{color:var(--muted)}
-.chartwrap{overflow-x:auto}
-svg.scatter{width:100%;height:auto;display:block}
-svg.scatter text{fill:var(--muted);font:11px var(--mono)}
-.compare{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 14px;font-size:.88rem;align-items:baseline}
-.compare .h{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.compare .v{font-family:var(--mono)}
-.legend{display:flex;gap:14px;font-size:.78rem;color:var(--muted)}
-.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
-.legend .lb::before{background:var(--bread)} .legend .lu::before{background:var(--buns)}
-.saving{font-size:.75rem;color:var(--muted)}
-/* photo picker */
-.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
-.photopick{display:flex;flex-direction:column;gap:8px}
-.photopick img{width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--r);border:1px solid var(--line)}
-.photobtn{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--muted);border-radius:var(--r);padding:20px;color:var(--muted);font-weight:600;cursor:pointer;background:var(--surface)}
-.photobtn svg{width:22px;height:22px}
-.photobtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
-.hint{margin:0;font-size:.82rem;color:var(--muted)}
-/* feed post */
-.post{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
-.post:hover{border-color:var(--muted)}
-.post .head{padding:14px 14px 0;display:flex;flex-direction:column;gap:6px;min-width:0}
-.post .meta{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:.8rem;color:var(--muted)}
-.post .trow{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.post .title{font-family:var(--display);font-weight:700;font-size:1.2rem;line-height:1.2;min-width:0;overflow-wrap:anywhere}
-.post .cap{font-size:.93rem;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
-.post .statrow{display:flex;gap:6px 22px;padding:10px 14px 14px;flex-wrap:wrap}
-.post .statrow div{display:flex;flex-direction:column}
-.post .statrow small{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-.post .statrow strong{font-family:var(--mono);font-weight:500;font-size:1.1rem}
-.post .ph{width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--line)}
-.post .flourbar{margin:0;border-radius:0;height:5px}
-.dphoto{width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;background:var(--line)}
-.cap.big{font-size:1rem;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
-@media (prefers-reduced-motion:no-preference){.bake,.btn{transition:border-color .15s,background .15s}}
-
-/* ---------- Bagerpapir ---------- */
-body{font-size:15px}
-header.top{flex-direction:column;align-items:flex-start;gap:2px;border-bottom:2px dashed var(--ink);padding-block:16px 10px}
-header.top .sub{order:-1;font-family:var(--mono);color:var(--ink);letter-spacing:.2em;font-size:.72rem;text-transform:uppercase}
-header.top h1{font-family:var(--display);font-weight:900;font-size:2.5rem;line-height:.9;text-transform:uppercase;letter-spacing:.01em}
-h2,h3,legend{font-family:var(--display);text-transform:uppercase;letter-spacing:.01em}
-.chip,.sortsel{border:2px solid var(--ink);border-radius:0;background:transparent;color:var(--ink);font-weight:700;text-transform:uppercase;font-size:.8rem;padding:3px 9px}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.sortsel{background:var(--bg)}
-.bakes{gap:16px}
-.post,.detail,.empty,.bake{background:var(--surface);border:0;border-radius:0;box-shadow:3px 3px 0 var(--ink)}
-.post{padding:12px;gap:8px}
-.post:hover,.bake:hover{border:0;box-shadow:5px 5px 0 var(--ink)}
-.post .ph{aspect-ratio:4/3;background:var(--accent-soft)}
-.post .trow{align-items:center}
-.post .title{font-family:var(--display);font-weight:700;font-size:1.75rem;line-height:1;text-transform:uppercase}
-.post .cap{font-size:.92rem}
-.ticket{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;text-transform:uppercase;border-top:1px dashed var(--ink);padding-top:6px}
-.post .flourbar{height:5px;margin-top:2px}
-.stamp{display:inline-block;border:2px solid var(--accent);color:var(--accent);padding:0 6px;font-weight:700;font-family:var(--mono);transform:rotate(var(--rot,-4deg));white-space:nowrap;font-size:1rem}
-.tag{border:1px dashed var(--ink);color:var(--ink);border-radius:0}
-.kind::before{border-radius:0}
-.empty{border:0}
-.detail h2{font-size:2rem;line-height:1}
-.kv{border-top:1px dashed var(--ink);border-bottom:1px dashed var(--ink);padding-block:10px}
-.kv small,.calc small{color:var(--muted)}
-table.fl td{border-bottom:1px dashed var(--line)}
-input[type=text],input[type=number],input[type=date],select,textarea{background:var(--surface);border:2px solid var(--ink);border-radius:0}
-.seg{border:2px solid var(--ink);border-radius:0}
-.seg button{background:var(--surface);text-transform:uppercase}
-.iconbtn{border:2px solid var(--ink);border-radius:0;color:var(--ink)}
-.calc{background:var(--surface);border:1px dashed var(--ink);border-radius:0}
-.rate button{color:var(--line)}
-.rate button.on{color:var(--accent)}
-.btn{border:2px solid var(--ink);border-radius:0;background:var(--surface);text-transform:uppercase;font-weight:700}
-.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.btn.danger{color:var(--bad);border-color:var(--bad)}
-.linkbtn{color:var(--ink);text-decoration:underline;text-transform:uppercase}
-.photobtn{border:2px dashed var(--ink);border-radius:0;color:var(--ink);background:var(--surface);text-transform:uppercase}
-.photopick img,.dphoto{border-radius:0;border:0}
-label.f{color:var(--ink);text-transform:uppercase;font-size:.72rem;letter-spacing:.04em}
-label.f .u{text-transform:none}
-.raterow span{text-transform:uppercase;font-size:.8rem}
-.err{font-weight:700}
-nav.tabs{background:var(--bg);border-top:2px solid var(--ink)}
-nav.tabs button{flex-direction:row;justify-content:center;padding:15px 4px 17px;color:var(--ink);font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-nav.tabs button svg{display:none}
-nav.tabs button[aria-selected="true"]{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
-nav.tabs button.new{background:var(--ink);color:var(--surface)}
-nav.tabs button.new[aria-selected="true"]{color:var(--surface)}
-nav.tabs button.new span.plus{display:none}
-nav.tabs button.new::before{content:"+ "}
-/* ---------- web-app ---------- */
-header.top{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 16px);position:sticky}
-.hbtn{position:absolute;right:0;bottom:12px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font:700 .75rem var(--mono);text-transform:uppercase;padding:4px 9px;cursor:pointer}
-.install{background:var(--surface);box-shadow:3px 3px 0 var(--ink);padding:18px 16px;display:flex;flex-direction:column;gap:14px}
-.install h2{font-size:2rem;line-height:1}
-.install ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;counter-reset:s}
-.install li{display:grid;grid-template-columns:2rem 1fr;gap:10px;align-items:start;counter-increment:s}
-.install li::before{content:counter(s);font:900 1.6rem/1 var(--display);border:2px solid var(--ink);width:2rem;height:2rem;display:grid;place-items:center}
-.install .share{display:inline-block;width:1.1em;height:1.1em;vertical-align:-.2em}
-.note{border-top:1px dashed var(--ink);padding-top:10px;font-size:.85rem;margin:0}
-.backup p{margin:0}
-.gwrap{position:relative}
-.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+/* ---------- recipe & bake pages ---------- */
+.hero{position:relative;height:300px;background:var(--ph);margin-inline:auto}
+.hero .collage{position:absolute;inset:0;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:2px}
+.hero .collage>*:first-child{grid-row:span 2}
+.hero .collage.one{grid-template-columns:1fr;grid-template-rows:1fr}
+.hero .collage.two{grid-template-rows:1fr}
+.hero .collage.two>*:first-child{grid-row:auto}
+.hero img,.hero .noimg{width:100%;height:100%;object-fit:cover;display:block}
+.hero .noimg{display:flex}
+.hero .noimg svg{width:34%;max-width:150px}
+.hero .back{top:calc(env(safe-area-inset-top,0px) + 14px);left:16px}
+.hero .edit{top:calc(env(safe-area-inset-top,0px) + 14px);right:16px}
+.hero .count{position:absolute;bottom:30px;right:14px;background:rgba(42,33,26,.78);color:#fff;padding:3px 9px;border-radius:8px;font-size:.75rem;pointer-events:none}
+.gallery{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .gallery::-webkit-scrollbar{display:none}
-.gallery img{flex:0 0 100%;width:100%;max-width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:start;display:block;background:var(--accent-soft)}
-.gcount{position:absolute;top:8px;right:8px;background:var(--ink);color:var(--surface);font:700 .75rem var(--mono);padding:2px 7px;pointer-events:none}
+.gallery img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start}
+.sheet{position:relative;margin-top:-18px;background:var(--bg);border-radius:22px 22px 0 0;padding:22px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.sheet h1{font-size:2.3rem}
+.meta{font-size:.82rem;color:var(--muted)}
+.titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.titlerow .stamp{font-size:1.15rem;margin-top:4px}
+.stats{background:var(--surf);border-radius:14px;box-shadow:3px 3px 0 var(--ink);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));text-align:center;padding:12px 0}
+.stats div{display:flex;flex-direction:column;padding:0 4px}
+.stats div+div{border-left:1px solid var(--line)}
+.stats b{font-size:1.2rem}
+.stats span{font-size:.7rem;color:var(--muted)}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;width:100%}
+.row .th{flex:0 0 56px;height:56px;border-radius:10px;overflow:hidden;background:var(--ph);position:relative}
+.row .th img,.row .th .noimg{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.row .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.row .tx b{font-size:.92rem}
+.row .tx span{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .stamp{font-size:.8rem}
+.info{display:flex;flex-direction:column;gap:12px;font-size:.9rem;border-top:1px solid var(--line);padding-top:14px}
+.info>div{display:flex;gap:14px;align-items:flex-start}
+.info svg{flex:none;width:24px;height:24px;margin-top:2px}
+.info b{display:block}
+.cap{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.notes{background:var(--surf);border-radius:12px;padding:12px 14px;white-space:pre-wrap;font-size:.9rem}
+.notes small{display:block;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.subr{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:.85rem}
+.stars{color:var(--accent);letter-spacing:1px}
+.stars .off{color:#D6CCBC}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions .btn{flex:1}
+.bottombar{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--surf);border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:640px;margin:0 auto}
+.bottombar span{font-size:.78rem;display:flex;flex-direction:column}
+.bottombar span b{font-size:.92rem}
+
+/* ---------- page header (log, form, backup) ---------- */
+.phead{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 12px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;border-bottom:1px solid var(--line)}
+.phead h1{font-size:2.2rem}
+.phead .smallbtn{border:2px solid var(--ink);background:var(--surf);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.8rem;cursor:pointer}
+
+/* ---------- form ---------- */
+form{display:flex;flex-direction:column;gap:22px;padding:16px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{font:900 1.4rem/1 var(--display);text-transform:uppercase;margin-bottom:10px;padding:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:370px){.g3{grid-template-columns:1fr 1fr}}
+label.f,div.f{display:flex;flex-direction:column;gap:4px;font-size:.75rem;font-weight:700;min-width:0}
+label.f .u{font-weight:400;color:var(--muted)}
+input[type=text],input[type=number],input[type=date],select.inp,textarea{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0;font-size:16px}
+input:focus,textarea:focus{border-color:var(--ink);outline:none}
+textarea{min-height:76px;resize:vertical}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surf);border-radius:10px;padding:10px 6px;font-weight:700;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surf);border-color:var(--ink)}
+.flourrow{display:grid;grid-template-columns:1fr 92px 40px;gap:8px;align-items:center}
+.iconbtn{border:1px solid var(--line);background:var(--surf);border-radius:10px;height:44px;cursor:pointer;display:grid;place-items:center}
+.calc{background:var(--surf);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;box-shadow:3px 3px 0 var(--ink)}
+.calc div{display:flex;flex-direction:column}
+.calc small{font-size:.68rem;color:var(--muted)}
+.calc strong{font-size:1.05rem}
 .thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .thumb{position:relative}
-.thumb img{width:100%;max-width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--accent-soft)}
-.thumb button{position:absolute;top:4px;right:4px;width:30px;height:30px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer;padding:0}
-.ok{font-weight:700;color:var(--good)}
+.thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block;border-radius:10px;background:var(--ph)}
+.thumb button{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:50%;border:0;background:var(--surf);font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.photobtn{display:flex;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--ink);border-radius:12px;padding:18px;font-weight:700;cursor:pointer;background:var(--surf)}
+.photobtn svg{width:22px;height:22px}
+.photobtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.raterow{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.85rem;font-weight:700}
+.rate{display:flex}
+.rate button{background:none;border:0;font-size:1.6rem;line-height:1;cursor:pointer;color:#D6CCBC;padding:2px 3px}
+.rate.small button{font-size:1.3rem}
+.rate button.on{color:var(--accent)}
+.err{color:var(--stamp);font-weight:700;margin:0}
+.ok{color:var(--good);font-weight:700}
+
+/* ---------- install / backup ---------- */
+.card{margin:16px;background:var(--surf);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:18px;display:flex;flex-direction:column;gap:14px}
+.card h2{font-size:1.9rem}
+.card p{margin:0}
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:2rem 1fr;gap:10px;align-items:start;counter-increment:s}
+.steps li::before{content:counter(s);font:900 1.4rem/1 var(--display);border:2px solid var(--ink);border-radius:50%;width:2rem;height:2rem;display:grid;place-items:center}
+.share{display:inline-block;width:1.1em;height:1.1em;vertical-align:-.2em}
+.note{border-top:1px dashed var(--line);padding-top:10px;font-size:.85rem}
+
+/* ---------- bottom nav ---------- */
+nav.menu{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surf);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.menu .in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:640px;margin:0 auto}
+nav.menu button{background:none;border:0;padding:9px 4px 11px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem;font-weight:700;color:var(--muted);cursor:pointer}
+nav.menu button svg{width:24px;height:24px}
+nav.menu button[aria-current="page"]{color:var(--accent)}
 </style>
 </head>
 <body>
 
-<header class="top" lang="da">
-  <h1>Surdejs&shy;loggen</h1>
-  <span class="sub" id="countLbl">Bagejournal</span>
-  <button class="hbtn" id="backupBtn" type="button">Backup</button>
-</header>
+<div id="splash" aria-hidden="true">
+  <svg viewBox="0 0 100 100" role="img" aria-label="Surdejsloggen logo"><rect x="17" y="17" width="72" height="72" rx="10" fill="#2A211A"/><rect x="13" y="13" width="72" height="72" rx="10" fill="#FFFFFF"/><path d="M23 64 C23 43 34 35 49 35 C64 35 75 43 75 64 Z" fill="#B9773A" stroke="#2A211A" stroke-width="3" stroke-linejoin="round"/><path d="M20 64 H78" stroke="#2A211A" stroke-width="3" stroke-linecap="round"/><path d="M34 57 l7 -11 M45 57 l7 -11 M56 57 l7 -11" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/></svg>
+  <div class="word">Surdejsloggen</div>
+  <div class="sub">Bagejournal</div>
+</div>
 
-<main>
-  <!-- LOG -->
-  <section class="view" id="v-log">
-    <div class="filters" role="group" aria-label="Filtrér">
-      <button class="chip" data-f="all" aria-pressed="true">Alle</button>
-      <button class="chip" data-f="bread" aria-pressed="false">Brød</button>
-      <button class="chip" data-f="buns" aria-pressed="false">Boller</button>
-      <select class="sortsel" id="sortSel" aria-label="Sortér">
-        <option value="new">Nyeste først</option>
-        <option value="old">Ældste først</option>
-        <option value="starsDesc">Flest stjerner</option>
-        <option value="starsAsc">Færrest stjerner</option>
-      </select>
+<!-- HOME -->
+<section id="v-home">
+  <div class="top">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+      <label for="q"><b>Søg i dine bagninger</b><input id="q" type="search" placeholder="Opskrift · mel · tekst" autocomplete="off"></label>
     </div>
-    <ul class="bakes" id="list"></ul>
-    <div class="empty" id="emptyLog">
-      <h2>Ingen bagninger endnu</h2>
-      <p>Hver bagning gemmer mel, vand, surdej, salt, tider og hvordan det blev. Tryk på <b>Ny bagning</b> nedenfor for at tilføje den første.</p>
-    </div>
-  </section>
-
-  <!-- INSTALL -->
-  <section class="view" id="v-install" hidden>
-    <div class="install">
-      <h2>Hent appen på din iPhone</h2>
-      <p style="margin:0">Surdejsloggen er en web-app. Den kommer ikke fra App Store, men lægges på din hjemmeskærm direkte fra denne side. Det er gratis.</p>
-      <ol>
-        <li><span>Åbn denne side i <b>Safari</b>.</span></li>
-        <li><span>Tryk på <b>Del</b>-knappen <svg class="share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Del-ikonet"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg> nederst på skærmen.</span></li>
-        <li><span>Rul ned og vælg <b>Føj til hjemmeskærm</b>, og tryk <b>Tilføj</b>.</span></li>
-        <li><span>Åbn <b>Surdej</b> fra hjemmeskærmen. Den virker også uden internet.</span></li>
-      </ol>
-      <p class="note">Dine bagninger og billeder gemmes kun på telefonen, inde i appen. Installér den derfor, før du begynder at logge. Bruger du Android, så vælg <b>Installér app</b> i Chromes menu.</p>
-      <button class="btn" id="skipInstall" type="button">Brug den i browseren i stedet</button>
-    </div>
-  </section>
-
-  <!-- BACKUP -->
-  <section class="view backup" id="v-backup" hidden>
-    <button class="linkbtn" id="backupBack" type="button">← Logbog</button>
-    <div class="detail">
-      <h2>Backup</h2>
-      <p>Dine bagninger ligger kun på denne telefon. Gem en backup en gang imellem, fx i Filer eller iCloud Drive, så du ikke mister dem, hvis du sletter appen eller skifter telefon.</p>
-      <button class="btn primary" id="exportBtn" type="button">Gem backup</button>
-      <label class="photobtn" for="importFile">Indlæs backup fra fil
-        <input type="file" id="importFile" accept="application/json,.json" class="vh">
-      </label>
-      <p id="backupMsg" aria-live="polite"></p>
-    </div>
-  </section>
-
-  <!-- DETAIL -->
-  <section class="view" id="v-detail" hidden></section>
-
-  <!-- FORM -->
-  <section class="view" id="v-form" hidden>
-    <h2 id="formTitle" style="font-size:1.35rem">Ny bagning</h2>
-    <form id="form" novalidate>
-      <fieldset>
-        <div class="grid2">
-          <label class="f" for="f-date">Dato<input type="date" id="f-date" required></label>
-          <div class="f" style="display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted);font-weight:600">Type
-            <div class="seg" role="group" aria-label="Type">
-              <button type="button" data-kind="bread" aria-pressed="true">Brød</button>
-              <button type="button" data-kind="buns" aria-pressed="false">Boller</button>
-            </div>
-          </div>
-        </div>
-        <label class="f" for="f-name">Opskriftens navn<input type="text" id="f-name" list="recipes" placeholder="fx Landbrød, Speltboller" autocomplete="off"></label>
-        <datalist id="recipes"></datalist>
-      </fieldset>
-
-      <fieldset>
-        <legend>Billede &amp; tekst</legend>
-        <div class="photopick" id="photoPick">
-          <div class="thumbs" id="thumbs"></div>
-          <label class="photobtn" id="photoLbl" for="f-photo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-            <span id="photoLblTxt">Tilføj billeder</span>
-            <input type="file" id="f-photo" accept="image/*" multiple class="vh">
-          </label>
-        </div>
-        <label class="f" for="f-caption">Tekst <span class="u">(valgfri)</span><textarea id="f-caption" placeholder="Fx: Første forsøg med rug – flot ovnspring!"></textarea></label>
-      </fieldset>
-
-      <fieldset>
-        <legend>Mel</legend>
-        <div id="flours" style="display:flex;flex-direction:column;gap:8px"></div>
-        <datalist id="flourTypes"></datalist>
-        <button type="button" class="linkbtn" id="addFlour">+ Tilføj mere mel</button>
-      </fieldset>
-
-      <fieldset>
-        <legend>Vand, surdej &amp; salt</legend>
-        <div class="grid3">
-          <label class="f" for="f-water">Vand <span class="u">g</span><input type="number" inputmode="decimal" id="f-water" min="0"></label>
-          <label class="f" for="f-starter">Surdej <span class="u">g</span><input type="number" inputmode="decimal" id="f-starter" min="0"></label>
-          <label class="f" for="f-salt">Salt <span class="u">g</span><input type="number" inputmode="decimal" id="f-salt" min="0" step="0.5"></label>
-        </div>
-        <label class="f" for="f-extras">Ekstra <span class="u">(smør, mælk, kerner, sukker…)</span><input type="text" id="f-extras"></label>
-        <div class="calc" aria-live="polite">
-          <div><small>Surdej</small><strong id="c-ino">–</strong></div>
-          <div><small>Salt</small><strong id="c-salt">–</strong></div>
-          <div><small>Dej i alt</small><strong id="c-dough">–</strong></div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Tider &amp; ovn</legend>
-        <div class="grid3">
-          <label class="f" for="f-bulk">Hævning <span class="u">t</span><input type="number" inputmode="decimal" id="f-bulk" min="0" step="0.25"></label>
-          <label class="f" for="f-cold">Køleskab <span class="u">t</span><input type="number" inputmode="decimal" id="f-cold" min="0" step="0.5"></label>
-          <label class="f" for="f-proof">Efterhævning <span class="u">t</span><input type="number" inputmode="decimal" id="f-proof" min="0" step="0.25"></label>
-          <label class="f" for="f-temp">Ovn <span class="u">°C</span><input type="number" inputmode="numeric" id="f-temp" min="0"></label>
-          <label class="f" for="f-time">Bagetid <span class="u">min</span><input type="number" inputmode="numeric" id="f-time" min="0"></label>
-        </div>
-        <div class="f" style="display:flex;flex-direction:column;gap:4px;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600">Ovnfunktion
-          <div class="seg" role="group" aria-label="Ovnfunktion">
-            <button type="button" data-oven="varmluft" aria-pressed="false">Varmluft</button>
-            <button type="button" data-oven="overunder" aria-pressed="false">Over-/undervarme</button>
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Hvordan blev det?</legend>
-        <div class="raterow"><span>Samlet</span><div class="rate" data-r="overall"></div></div>
-        <div class="raterow"><span>Hævning / ovnspring</span><div class="rate small" data-r="rise"></div></div>
-        <div class="raterow"><span>Krumme</span><div class="rate small" data-r="crumb"></div></div>
-        <div class="raterow"><span>Skorpe</span><div class="rate small" data-r="crust"></div></div>
-        <div class="raterow"><span>Smag</span><div class="rate small" data-r="taste"></div></div>
-        <label class="f" for="f-notes">Noter til næste gang<textarea id="f-notes" placeholder="Hvad vil du ændre næste gang?"></textarea></label>
-      </fieldset>
-
-      <p class="err" id="formErr" hidden></p>
-      <div class="actions">
-        <button type="button" class="btn" id="cancelForm">Annullér</button>
-        <button type="submit" class="btn primary" id="saveBtn">Gem bagning</button>
+    <div class="tabs" role="group" aria-label="Filtrér">
+      <button class="tab" data-f="all" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>Alle</button>
+      <button class="tab" data-f="bread" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 15c0-4.5 4-8 9-8s9 3.5 9 8v3H3z"/><path d="M8 11l1.5 2M12 10l1 2.3M16 11l1 2"/></svg>Brød</button>
+      <button class="tab" data-f="buns" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8" cy="14" r="4.5"/><circle cx="16" cy="14" r="4.5"/></svg>Boller</button>
+      <button class="tab" data-f="five" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>5 stjerner</button>
+      <div class="tab" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Sortér
+        <select id="sortSel" aria-label="Sortér">
+          <option value="new">Senest bagt</option>
+          <option value="best">Flest stjerner</option>
+          <option value="worst">Færrest stjerner</option>
+          <option value="count">Flest bagninger</option>
+          <option value="az">Navn A–Å</option>
+        </select>
       </div>
-    </form>
-  </section>
+    </div>
+  </div>
+  <div class="sortlbl" id="sortLbl" hidden></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="homeEmpty" hidden>
+    <h2>Ingen bagninger endnu</h2>
+    <p>Log din første bagning med mel, vand, surdej, tider og billeder. Bagninger med samme navn samles som én opskrift her.</p>
+    <button class="btn primary" type="button" data-new>+ Ny bagning</button>
+  </div>
+</section>
 
-</main>
+<!-- RECIPE -->
+<section id="v-recipe" hidden></section>
 
-<nav class="tabs" aria-label="Sektioner">
-  <div class="in" role="tablist">
-    <button role="tab" data-tab="log" aria-selected="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 6h14M5 12h14M5 18h9"/></svg>Logbog</button>
-    <button role="tab" data-tab="form" class="new" aria-selected="false">
-      <span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Ny bagning</button>
+<!-- BAKE -->
+<section id="v-bake" hidden></section>
+
+<!-- LOG -->
+<section id="v-log" hidden>
+  <div class="phead"><h1>Logbog</h1><button class="smallbtn" type="button" id="backupBtn">Backup</button></div>
+  <div class="wrap rows" id="logRows"></div>
+  <div class="empty" id="logEmpty" hidden><h2>Tom logbog</h2><p>Alle dine bagninger vises her, nyeste først.</p></div>
+</section>
+
+<!-- FORM -->
+<section id="v-form" hidden>
+  <div class="phead"><h1 id="formTitle">Ny bagning</h1><button class="smallbtn" type="button" id="cancelForm">Annullér</button></div>
+  <form id="form" novalidate>
+    <fieldset>
+      <div class="g2">
+        <label class="f" for="f-date">Dato<input type="date" id="f-date" required></label>
+        <div class="f">Type
+          <div class="seg" role="group" aria-label="Type">
+            <button type="button" data-kind="bread" aria-pressed="true">Brød</button>
+            <button type="button" data-kind="buns" aria-pressed="false">Boller</button>
+          </div>
+        </div>
+      </div>
+      <label class="f" for="f-name">Opskriftens navn <span class="u">Samme navn samler bagningerne under én opskrift</span><input type="text" id="f-name" list="recipes" placeholder="fx Landbrød, Speltboller" autocomplete="off"></label>
+      <datalist id="recipes"></datalist>
+    </fieldset>
+
+    <fieldset>
+      <legend>Billeder &amp; tekst</legend>
+      <div class="thumbs" id="thumbs"></div>
+      <label class="photobtn" for="f-photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <span id="photoLblTxt">Tilføj billeder</span>
+        <input type="file" id="f-photo" accept="image/*" multiple class="vh">
+      </label>
+      <label class="f" for="f-caption">Tekst <span class="u">(valgfri)</span><textarea id="f-caption" placeholder="Fx: Første forsøg med rug – flot ovnspring!"></textarea></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Mel</legend>
+      <div id="flours" style="display:flex;flex-direction:column;gap:8px"></div>
+      <datalist id="flourTypes"></datalist>
+      <button type="button" class="linkbtn" id="addFlour" style="align-self:flex-start">+ Tilføj mere mel</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Vand, surdej &amp; salt</legend>
+      <div class="g3">
+        <label class="f" for="f-water">Vand <span class="u">g</span><input type="number" inputmode="decimal" id="f-water" min="0"></label>
+        <label class="f" for="f-starter">Surdej <span class="u">g</span><input type="number" inputmode="decimal" id="f-starter" min="0"></label>
+        <label class="f" for="f-salt">Salt <span class="u">g</span><input type="number" inputmode="decimal" id="f-salt" min="0" step="0.5"></label>
+      </div>
+      <label class="f" for="f-extras">Ekstra <span class="u">smør, mælk, kerner, sukker…</span><input type="text" id="f-extras"></label>
+      <div class="calc" aria-live="polite">
+        <div><small>Surdej</small><strong id="c-ino">–</strong></div>
+        <div><small>Salt</small><strong id="c-salt">–</strong></div>
+        <div><small>Dej i alt</small><strong id="c-dough">–</strong></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tider &amp; ovn</legend>
+      <div class="g3">
+        <label class="f" for="f-bulk">Hævning <span class="u">t</span><input type="number" inputmode="decimal" id="f-bulk" min="0" step="0.25"></label>
+        <label class="f" for="f-cold">Køleskab <span class="u">t</span><input type="number" inputmode="decimal" id="f-cold" min="0" step="0.5"></label>
+        <label class="f" for="f-proof">Efterhævning <span class="u">t</span><input type="number" inputmode="decimal" id="f-proof" min="0" step="0.25"></label>
+        <label class="f" for="f-temp">Ovn <span class="u">°C</span><input type="number" inputmode="numeric" id="f-temp" min="0"></label>
+        <label class="f" for="f-time">Bagetid <span class="u">min</span><input type="number" inputmode="numeric" id="f-time" min="0"></label>
+      </div>
+      <div class="f">Ovnfunktion
+        <div class="seg" role="group" aria-label="Ovnfunktion">
+          <button type="button" data-oven="varmluft" aria-pressed="false">Varmluft</button>
+          <button type="button" data-oven="overunder" aria-pressed="false">Over-/undervarme</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Hvordan blev det?</legend>
+      <div class="raterow"><span>Samlet</span><div class="rate" data-r="overall"></div></div>
+      <div class="raterow"><span>Hævning / ovnspring</span><div class="rate small" data-r="rise"></div></div>
+      <div class="raterow"><span>Krumme</span><div class="rate small" data-r="crumb"></div></div>
+      <div class="raterow"><span>Skorpe</span><div class="rate small" data-r="crust"></div></div>
+      <div class="raterow"><span>Smag</span><div class="rate small" data-r="taste"></div></div>
+      <label class="f" for="f-notes">Noter til næste gang<textarea id="f-notes" placeholder="Hvad vil du ændre næste gang?"></textarea></label>
+    </fieldset>
+
+    <p class="err" id="formErr" hidden></p>
+    <button type="submit" class="btn primary" id="saveBtn">Gem bagning</button>
+  </form>
+</section>
+
+<!-- BACKUP -->
+<section id="v-backup" hidden>
+  <div class="phead"><h1>Backup</h1><button class="smallbtn" type="button" id="backupBack">Luk</button></div>
+  <div class="card">
+    <p>Dine bagninger og billeder ligger kun på denne telefon. Gem en backup en gang imellem, fx i Filer eller iCloud Drive, så du ikke mister dem, hvis du sletter appen eller skifter telefon.</p>
+    <button class="btn primary" id="exportBtn" type="button">Gem backup</button>
+    <label class="photobtn" for="importFile">Indlæs backup fra fil<input type="file" id="importFile" accept="application/json,.json" class="vh"></label>
+    <p id="backupMsg" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="v-install" hidden>
+  <div class="card" style="margin-top:calc(env(safe-area-inset-top,0px) + 24px)">
+    <h2>Hent appen på din iPhone</h2>
+    <p>Surdejsloggen kommer ikke fra App Store. Du lægger den på hjemmeskærmen direkte fra denne side, og det er gratis.</p>
+    <ol class="steps">
+      <li><span>Åbn denne side i <b>Safari</b>.</span></li>
+      <li><span>Tryk på <b>Del</b>-knappen <svg class="share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Del-ikonet"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg> nederst på skærmen.</span></li>
+      <li><span>Vælg <b>Føj til hjemmeskærm</b>, og tryk <b>Tilføj</b>.</span></li>
+      <li><span>Åbn <b>Surdej</b> fra hjemmeskærmen. Den virker også uden internet.</span></li>
+    </ol>
+    <p class="note">Dine bagninger og billeder gemmes kun på telefonen, inde i appen. Installér den derfor, før du begynder at logge. Bruger du Android, så vælg <b>Installér app</b> i Chromes menu.</p>
+    <button class="btn" id="skipInstall" type="button">Brug den i browseren i stedet</button>
+  </div>
+</section>
+
+<nav class="menu" aria-label="Menu" id="menu">
+  <div class="in">
+    <button type="button" data-nav="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>Udforsk</button>
+    <button type="button" data-nav="form"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></svg>Ny bagning</button>
+    <button type="button" data-nav="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Logbog</button>
   </div>
 </nav>
 
@@ -420,7 +383,16 @@ header.top{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 16px);position:
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const FLOURS = ["Hvedemel","Manitobamel","Fuldkornshvedemel","Spelt","Fuldkornsspelt","Rugmel","Fuldkornsrugmel","Emmer","Enkorn","Ølandshvede","Durum / semolina"];
-const PALETTE = ["#C9A26B","#7A5230","#8FA37A","#5E7FA3","#B86B4B","#6B5B8C","#9C9C5A","#4F8C86","#C27BA0","#8A8A8A"];
+const LOAF = '<svg viewBox="0 0 100 70" aria-hidden="true"><path d="M10 56 C10 30 26 18 50 18 C74 18 90 30 90 56 Z" fill="#CFAE80" stroke="#2A211A" stroke-width="3" stroke-linejoin="round"/><path d="M6 56 H94" stroke="#2A211A" stroke-width="3" stroke-linecap="round"/><path d="M30 48 l8 -14 M45 48 l8 -14 M60 48 l8 -14" stroke="#F4EDE1" stroke-width="3.5" stroke-linecap="round"/></svg>';
+const noimg = () => `<div class="noimg">${LOAF}</div>`;
+
+/* ---------- splash ---------- */
+const splash = $("#splash");
+const splashStart = Date.now();
+function hideSplash(){
+  const wait = Math.max(0, 1300 - (Date.now() - splashStart));
+  setTimeout(()=>{ splash.classList.add("out"); setTimeout(()=>splash.remove(), 500); }, wait);
+}
 
 /* ---------- storage: IndexedDB on the device ---------- */
 let bakes = [];
@@ -460,153 +432,238 @@ const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null
 const lsSet = (k,v) => { try{ localStorage.setItem(k,v); }catch(e){} };
 const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
 
-async function init(){
-  try{
-    idb = await openDB();
-    bakes = await tx("bakes","readonly",s=>s.getAll()) || [];
-    for(const ex of bakes.filter(b=>b.example)) await store.remove(ex.id);
-  }catch(e){
-    $("#emptyLog").innerHTML = "<h2>Appen kan ikke gemme</h2><p>Telefonen tillader ikke, at appen gemmer data. Slå privat browsing fra, eller installér appen på hjemmeskærmen.</p>";
-  }
-  render();
-  if(!isStandalone() && !lsGet("installSkipped")) show("install");
-  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-}
-$("#skipInstall").onclick = () => { lsSet("installSkipped","1"); show("log"); };
-
-/* ---------- maths ---------- */
+/* ---------- helpers ---------- */
 const n = v => { const x=parseFloat(v); return isFinite(x)?x:0; };
 function calc(b){
   const flourG = (b.flours||[]).reduce((s,f)=>s+n(f.g),0);
-  const sh = 100; // surdej regnes som 100 % hydrering
-  const st = n(b.starter);
-  const stFlour = st*100/(100+sh), stWater = st - stFlour;
-  const totFlour = flourG + stFlour;
-  const totWater = n(b.water) + stWater;
-  return {
-    flourG, totFlour,
+  const st = n(b.starter), stFlour = st/2, stWater = st/2;   // surdej regnes som 100 % hydrering
+  const totFlour = flourG + stFlour, totWater = n(b.water) + stWater;
+  return { flourG,
     hyd: totFlour ? totWater/totFlour*100 : null,
     ino: flourG ? st/flourG*100 : null,
     salt: totFlour ? n(b.salt)/totFlour*100 : null,
-    dough: flourG + n(b.water) + st + n(b.salt)
-  };
+    dough: flourG + n(b.water) + st + n(b.salt) };
 }
-const pct = v => v===null||!isFinite(v) ? "–" : v.toFixed(v<10?1:0)+"%";
-const fmt = v => (v===null||v===undefined||v==="") ? "–" : String(v);
-const avg = a => a.length ? a.reduce((s,x)=>s+x,0)/a.length : null;
+const pct = v => v===null||!isFinite(v) ? "–" : v.toFixed(v<10?1:0).replace(".",",")+" %";
+const fmt = v => (v===null||v===undefined||v==="") ? "–" : String(v).replace(".",",");
+const dec = v => v.toFixed(1).replace(".",",");
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const flourColor = (()=>{ const m={}; return t=>{ const k=(t||"").trim().toLowerCase(); if(!(k in m)){ const i=FLOURS.findIndex(f=>f.toLowerCase()===k); m[k]=PALETTE[i>=0?i%PALETTE.length:(Object.keys(m).length+5)%PALETTE.length]; } return m[k]; }; })();
-const stars = (r,max=5) => { r=Math.round(n(r)); let s=""; for(let i=1;i<=max;i++) s+= i<=r?"★":'<span class="off">★</span>'; return s; };
-const dateFmt = d => { try{ return new Date(d+"T12:00").toLocaleDateString("da-DK",{day:"numeric",month:"short",year:"numeric"}); }catch(e){ return d; } };
+const stars = r => { r=Math.round(n(r)); let s=""; for(let i=1;i<=5;i++) s+= i<=r?"★":'<span class="off">★</span>'; return s; };
+const dateFmt = d => { try{ return new Date(d+"T12:00").toLocaleDateString("da-DK",{day:"numeric",month:"long",year:"numeric"}); }catch(e){ return d; } };
 const shortDate = d => { const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||""); return m ? m[3]+"."+m[2]+"."+m[1].slice(2) : (d||""); };
-const sorted = () => bakes.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.created||0)-(a.created||0));
+const byNewest = (a,b) => (b.date||"").localeCompare(a.date||"") || (b.created||0)-(a.created||0);
+const rot = id => { let h=0; for(const c of String(id)) h=(h*31+c.charCodeAt(0))|0; return (Math.abs(h)%9)-4 || -3; };
+const kindName = k => k==="buns" ? "Boller" : "Brød";
+const ovenLabel = m => m==="varmluft"?"Varmluft":m==="overunder"?"Over-/undervarme":"";
+const picsOf = b => Array.isArray(b.pics) ? b.pics : (b.photo ? [b.photo] : []);
+const keyOf = name => (name||"").trim().toLowerCase() || "\u0000uden";
 
-/* ---------- navigation ---------- */
-let current = "log";
-function show(view){
-  current = view;
-  $("#v-log").hidden = view!=="log";
-  $("#v-detail").hidden = view!=="detail";
-  $("#v-form").hidden = view!=="form";
-  $("#v-install").hidden = view!=="install";
-  $("#v-backup").hidden = view!=="backup";
-  const tab = view==="detail" ? "log" : view;
-  $$("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===tab)));
-  window.scrollTo(0,0);
-}
-$$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{
-  if(b.dataset.tab==="form") openForm(null); else { show(b.dataset.tab); render(); }
-}));
-
-/* ---------- log ---------- */
-let logFilter = "all";
-$$("[data-f]").forEach(b=>b.addEventListener("click",()=>{
-  logFilter=b.dataset.f; $$("[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderLog();
-}));
-$("#sortSel").addEventListener("change",()=>renderLog());
-function renderLog(){
-  let list = sorted().filter(b=>logFilter==="all"||b.kind===logFilter);
-  const sm = $("#sortSel").value;
-  if(sm==="old") list.reverse();
-  else if(sm==="starsDesc") list.sort((a,b)=>n(b.overall)-n(a.overall));
-  else if(sm==="starsAsc") list.sort((a,b)=>{ const x=n(a.overall)||9, y=n(b.overall)||9; return x-y; });
-  $("#emptyLog").hidden = bakes.length>0;
-  $("#countLbl").textContent = "Bagejournal" + (bakes.length ? " · " + bakes.length + (bakes.length===1?" bagning":" bagninger") : "");
-  $("#list").innerHTML = list.map(b=>{
-    const c=calc(b);
-    const bar=(b.flours||[]).filter(f=>n(f.g)>0).map(f=>`<span style="width:${n(f.g)/c.flourG*100}%;background:${flourColor(f.type)}" title="${esc(f.type)}"></span>`).join("");
-    const rot = ((b.id.charCodeAt(b.id.length-1)%9)-4)||-3;
-    return `<li><article class="post" tabindex="0" role="button" data-id="${esc(b.id)}" aria-label="${esc(b.name||"Uden navn")}">
-      ${gallery(b)}
-      <div class="trow"><span class="title">${esc(b.name||"Uden navn")}</span>${b.overall?`<span class="stamp" style="--rot:${rot}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
-      ${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}
-      <div class="ticket"><span>${esc(shortDate(b.date))}</span><span>${b.kind==="buns"?"Boller":"Brød"}</span><span>Mel ${Math.round(c.flourG)} g</span>${b.time?`<span>${esc(b.time)} min</span>`:""}${b.example?'<span class="tag">Eksempel</span>':""}</div>
-      ${bar?`<span class="flourbar">${bar}</span>`:""}
-    </article></li>`;
-  }).join("") || (bakes.length?`<li class="empty">Ingen ${logFilter==="buns"?"boller":"brød"} endnu.</li>`:"");
-  wireImgs($("#list"));
-  $$("#list .post").forEach(el=>{
-    el.addEventListener("click",()=>openDetail(el.dataset.id));
-    el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openDetail(el.dataset.id); } });
+function recipes(){
+  const m = new Map();
+  for(const b of bakes.slice().sort(byNewest)){
+    const k = keyOf(b.name);
+    if(!m.has(k)) m.set(k, {key:k, name:b.name||"Uden navn", kind:b.kind, bakes:[]});
+    m.get(k).bakes.push(b);
+  }
+  return [...m.values()].map(r=>{
+    const rated = r.bakes.filter(b=>n(b.overall)>0);
+    r.avg = rated.length ? rated.reduce((s,b)=>s+n(b.overall),0)/rated.length : 0;
+    r.bestBake = rated.slice().sort((a,b)=>n(b.overall)-n(a.overall)||byNewest(a,b))[0] || r.bakes[0];
+    r.best = n(r.bestBake.overall);
+    r.latest = r.bakes[0].date;
+    const withPic = [r.bestBake, ...r.bakes].find(b=>picsOf(b).length);
+    r.cover = withPic ? picsOf(withPic)[0] : null;
+    r.allPics = r.bakes.flatMap(picsOf);
+    return r;
   });
 }
 
-/* ---------- detail ---------- */
-function openDetail(id){
-  const b = bakes.find(x=>x.id===id); if(!b) return;
-  const c = calc(b);
+/* ---------- photos ---------- */
+const photoUrls = new Map();
+async function photoUrl(id){
+  if(photoUrls.has(id)) return photoUrls.get(id);
+  const blob = await photos.get(id);
+  if(!blob) return null;
+  const u = URL.createObjectURL(blob); photoUrls.set(id,u); return u;
+}
+const img = (id, alt, cls="") => `<img data-photo="${esc(id)}" alt="${esc(alt)}" class="${cls}">`;
+function hydrate(root){
+  root.querySelectorAll("img[data-photo]").forEach(async el=>{
+    try{ const u = await photoUrl(el.dataset.photo); if(u) el.src = u; else el.outerHTML = noimg(); }catch(e){ el.outerHTML = noimg(); }
+  });
+}
+
+/* ---------- navigation ---------- */
+const VIEWS = ["home","recipe","bake","log","form","backup","install"];
+let current = "home", curRecipe = null, curBake = null, backTo = "home";
+function show(v){
+  current = v;
+  VIEWS.forEach(x=>{ $("#v-"+x).hidden = x!==v; });
+  const navKey = v==="recipe"||v==="bake" ? (backTo==="log"?"log":"home") : v;
+  $$("nav.menu button").forEach(b=>{ if(b.dataset.nav===navKey) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
+  $("#menu").hidden = v==="install" || v==="recipe" || v==="bake";
+  window.scrollTo(0,0);
+}
+$$("nav.menu button").forEach(b=>b.onclick=()=>{
+  const v=b.dataset.nav;
+  if(v==="form") openForm(null); else { backTo=v; show(v); render(); }
+});
+document.addEventListener("click", e=>{ if(e.target.closest("[data-new]")) openForm(null); });
+
+/* ---------- home ---------- */
+let filter = "all", query = "";
+$$(".tab[data-f]").forEach(b=>b.onclick=()=>{ filter=b.dataset.f; $$(".tab[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderHome(); });
+$("#q").addEventListener("input", e=>{ query=e.target.value.trim().toLowerCase(); renderHome(); });
+$("#sortSel").addEventListener("change", ()=>{ const s=$("#sortSel"); $("#sortLbl").textContent="Sorteret: "+s.options[s.selectedIndex].text; $("#sortLbl").hidden = s.value==="new"; renderHome(); });
+function matches(r){
+  if(filter==="bread" && r.kind!=="bread") return false;
+  if(filter==="buns" && r.kind!=="buns") return false;
+  if(filter==="five" && r.best<5) return false;
+  if(!query) return true;
+  const hay = [r.name, ...r.bakes.flatMap(b=>[b.caption,b.notes,b.extras,...(b.flours||[]).map(f=>f.type), shortDate(b.date)])].join(" ").toLowerCase();
+  return hay.includes(query);
+}
+function renderHome(){
+  let list = recipes().filter(matches);
+  const s = $("#sortSel").value;
+  const cmp = {
+    new:(a,b)=>(b.latest||"").localeCompare(a.latest||""),
+    best:(a,b)=>b.avg-a.avg||b.best-a.best,
+    worst:(a,b)=>(a.avg||9)-(b.avg||9),
+    count:(a,b)=>b.bakes.length-a.bakes.length,
+    az:(a,b)=>a.name.localeCompare(b.name,"da")
+  }[s];
+  list.sort(cmp);
+  $("#homeEmpty").hidden = bakes.length>0;
+  const grid = $("#grid");
+  if(!bakes.length){ grid.innerHTML=""; return; }
+  grid.innerHTML = list.map(r=>`
+    <button class="tile" type="button" data-recipe="${esc(r.key)}">
+      <span class="pic">${r.cover?img(r.cover,"Billede af "+r.name):noimg()}
+        <span class="chip">${r.bakes.length} ${r.bakes.length===1?"bagning":"bagninger"}</span>
+        ${r.avg?`<span class="stamp" style="--rot:${rot(r.key)}deg" aria-label="Gennemsnit ${dec(r.avg)} stjerner">${dec(r.avg)}</span>`:""}
+      </span>
+      <b>${esc(r.name)}</b>
+      <span class="when">Senest ${esc(shortDate(r.latest))}</span>
+    </button>`).join("") + `
+    <button class="tile add" type="button" data-new><span class="pic">+ Ny bagning</span></button>` +
+    (list.length ? "" : `<p style="grid-column:1/-1;margin:0;color:var(--muted)">Ingen opskrifter passer til søgningen.</p>`);
+  hydrate(grid);
+  grid.querySelectorAll("[data-recipe]").forEach(t=>t.onclick=()=>openRecipe(t.dataset.recipe));
+}
+
+/* ---------- recipe page ---------- */
+const backSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+const editSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
+function openRecipe(key){
+  const r = recipes().find(x=>x.key===key);
+  if(!r){ show("home"); renderHome(); return; }
+  curRecipe = key;
+  const pics = r.allPics.slice(0,3);
+  const cls = pics.length===1?"one":pics.length===2?"two":"";
+  const times = r.bakes.map(b=>n(b.time)).filter(Boolean);
+  const hyds = r.bakes.map(b=>calc(b).hyd).filter(v=>v!==null);
+  const v = $("#v-recipe");
+  v.innerHTML = `
+    <div class="hero">
+      <div class="collage ${cls}">${pics.length?pics.map((p,i)=>img(p,`Billede ${i+1} af ${r.name}`)).join(""):noimg()}</div>
+      <button class="circle back" type="button" aria-label="Tilbage">${backSvg}</button>
+      ${r.allPics.length>3?`<span class="count">${r.allPics.length} billeder</span>`:""}
+    </div>
+    <div class="sheet">
+      <div class="titlerow"><div><h1>${esc(r.name)}</h1><div class="meta">${kindName(r.kind)} · bagt ${r.bakes.length} ${r.bakes.length===1?"gang":"gange"}</div></div>
+        ${r.avg?`<span class="stamp" style="--rot:${rot(r.key)}deg">${dec(r.avg)}</span>`:""}</div>
+      <div class="stats">
+        <div><b>${r.best?r.best+" ★":"–"}</b><span>bedste</span></div>
+        <div><b>${hyds.length?pct(hyds.reduce((s,x)=>s+x,0)/hyds.length):"–"}</b><span>gns. hydrering</span></div>
+        <div><b>${times.length?times[0]+" min":"–"}</b><span>seneste bagetid</span></div>
+      </div>
+      <h2 style="font-size:1.5rem;margin-top:6px">Alle bagninger</h2>
+      <div class="rows">${r.bakes.map(b=>`
+        <button class="row" type="button" data-bake="${esc(b.id)}">
+          <span class="th">${picsOf(b)[0]?img(picsOf(b)[0],""):noimg()}</span>
+          <span class="tx"><b>${esc(shortDate(b.date))}${b.time?" · "+esc(b.time)+" min":""}</b><span>${esc(b.caption||b.notes||flourText(b))}</span></span>
+          ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}
+        </button>`).join("")}</div>
+    </div>
+    <div class="bottombar"><span><b>Bag den igen</b>med ${r.best?"den bedste udgave":"seneste udgave"}</span><button class="btn primary" type="button" id="rAgain">Bag igen</button></div>`;
+  v.style.paddingBottom = "90px";
+  hydrate(v);
+  v.querySelector(".back").onclick = ()=>{ show(backTo); render(); };
+  v.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>openBake(x.dataset.bake));
+  $("#rAgain").onclick = ()=>openForm(r.bestBake, true);
+  show("recipe");
+}
+const flourText = b => (b.flours||[]).filter(f=>n(f.g)>0).map(f=>`${fmt(f.g)} g ${f.type||"mel"}`).join(" · ");
+
+/* ---------- bake page ---------- */
+function openBake(id){
+  const b = bakes.find(x=>x.id===id); if(!b){ show("home"); return; }
+  curBake = id;
+  const c = calc(b), ps = picsOf(b);
   const sub = [["Hævning",b.rise],["Krumme",b.crumb],["Skorpe",b.crust],["Smag",b.taste]].filter(x=>x[1]);
-  $("#v-detail").innerHTML = `
-    <button class="linkbtn" id="backBtn">← Alle bagninger</button>
-    <div class="detail">
-      ${gallery(b)}
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-        <div style="min-width:0"><span class="kind ${b.kind==="buns"?"buns":"bread"}">${b.kind==="buns"?"Boller":"Brød"}</span> ${b.example?'<span class="tag">Eksempel</span>':""}
-          <h2 style="overflow-wrap:anywhere">${esc(b.name||"Uden navn")}</h2>
-          <div style="color:var(--muted);font-size:.85rem">${esc(dateFmt(b.date))}</div></div>
-        <div class="stars" style="font-size:1.3rem">${b.overall?stars(b.overall):""}</div>
+  const times = [b.bulk?fmt(b.bulk)+" t hævning":"", b.cold?fmt(b.cold)+" t køleskab":"", b.proof?fmt(b.proof)+" t efterhævning":""].filter(Boolean);
+  const v = $("#v-bake");
+  v.innerHTML = `
+    <div class="hero">
+      ${ps.length?`<div class="gallery">${ps.map((p,i)=>img(p,`Billede ${i+1} af ${b.name||"bagningen"}`)).join("")}</div>`:`<div class="collage one">${noimg()}</div>`}
+      <button class="circle back" type="button" aria-label="Tilbage">${backSvg}</button>
+      <button class="circle edit" type="button" aria-label="Redigér">${editSvg}</button>
+      ${ps.length>1?`<span class="count" id="gcount">1 / ${ps.length}</span>`:""}
+    </div>
+    <div class="sheet">
+      <div class="titlerow"><div><h1>${esc(b.name||"Uden navn")}</h1><div class="meta">${kindName(b.kind)} · ${esc(dateFmt(b.date))}</div></div>
+        ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</div>
+      ${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}
+      <div class="info">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 9h12l-1 11H7z"/><path d="M9 9V6a3 3 0 016 0v3"/></svg><span><b>${Math.round(c.flourG)} g mel</b>${esc(flourText(b))}</span></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3c3 4 6 7.5 6 11a6 6 0 01-12 0c0-3.5 3-7 6-11z"/></svg><span><b>${fmt(b.water)} g vand · ${fmt(b.starter)} g surdej · ${fmt(b.salt)} g salt</b>Hydrering ${pct(c.hyd)} · surdej ${pct(c.ino)} · salt ${pct(c.salt)}${b.extras?"<br>Ekstra: "+esc(b.extras):""}</span></div>
+        ${times.length?`<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l3 2M9 3h6"/></svg><span><b>${times[0]}</b>${times.slice(1).join(" · ")}</span></div>`:""}
+        ${b.temp||b.time?`<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M7 9h10M8 15h8"/></svg><span><b>${b.temp?fmt(b.temp)+" °C":""}${b.temp&&b.time?" i ":""}${b.time?fmt(b.time)+" min":""}</b>${ovenLabel(b.ovenMode)}</span></div>`:""}
       </div>
-      ${b.caption?`<p class="cap big">${esc(b.caption)}</p>`:""}
-      <div class="kv">
-        <div><small>Hydrering</small><strong>${pct(c.hyd)}</strong></div>
-        <div><small>Surdej</small><strong>${pct(c.ino)}</strong></div>
-        <div><small>Salt</small><strong>${pct(c.salt)}</strong></div>
-        <div><small>Hævning</small><strong>${b.bulk?fmt(b.bulk)+" t":"–"}</strong></div>
-        <div><small>Køleskab</small><strong>${b.cold?fmt(b.cold)+" t":"–"}</strong></div>
-        <div><small>Efterhævning</small><strong>${b.proof?fmt(b.proof)+" t":"–"}</strong></div>
-        <div><small>Ovn</small><strong>${b.temp?fmt(b.temp)+"°C":"–"}${b.ovenMode?`<br><span style="font-size:.78rem">${ovenLabel(b.ovenMode)}</span>`:""}</strong></div>
-        <div><small>Bagetid</small><strong>${b.time?fmt(b.time)+" min":"–"}</strong></div>
-      </div>
-      <table class="fl"><tbody>
-        ${(b.flours||[]).map(f=>`<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${flourColor(f.type)};margin-right:7px"></span>${esc(f.type||"Mel")}</td><td class="r">${fmt(f.g)} g</td><td class="r" style="width:4.5rem;color:var(--muted)">${c.flourG?Math.round(n(f.g)/c.flourG*100)+"%":""}</td></tr>`).join("")}
-        <tr><td>Vand</td><td class="r">${fmt(b.water)} g</td><td></td></tr>
-        <tr><td>Surdej</td><td class="r">${fmt(b.starter)} g</td><td></td></tr>
-        <tr><td>Salt</td><td class="r">${fmt(b.salt)} g</td><td></td></tr>
-        ${b.extras?`<tr><td colspan="3">${esc(b.extras)}</td></tr>`:""}
-      </tbody></table>
-      ${sub.length?`<div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem">${sub.map(s=>`<span>${s[0]} <span class="stars" style="font-size:.9rem">${stars(s[1])}</span></span>`).join("")}</div>`:""}
-      ${b.notes?`<div class="notes">${esc(b.notes)}</div>`:""}
+      ${sub.length?`<div class="subr">${sub.map(s=>`<span>${s[0]} <span class="stars">${stars(s[1])}</span></span>`).join("")}</div>`:""}
+      ${b.notes?`<div class="notes"><small>Noter til næste gang</small>${esc(b.notes)}</div>`:""}
       <div class="actions">
-        <button class="btn primary" id="againBtn">Bag igen</button>
-        <button class="btn" id="editBtn">Redigér</button>
-        <button class="btn danger" id="delBtn">Slet</button>
+        <button class="btn primary" type="button" id="bAgain">Bag igen</button>
+        <button class="btn" type="button" id="bEdit">Redigér</button>
+        <button class="btn danger" type="button" id="bDel">Slet</button>
       </div>
-      <p class="hint" style="margin:0;font-size:.8rem;color:var(--muted)">“Bag igen” åbner en ny bagning udfyldt med denne opskrift, så du kan ændre én ting og sammenligne.</p>
     </div>`;
-  wireImgs($("#v-detail"));
-  $("#backBtn").onclick=()=>{ show("log"); };
-  $("#editBtn").onclick=()=>openForm(b,false);
-  $("#againBtn").onclick=()=>openForm(b,true);
-  const del=$("#delBtn"); let armed=false;
+  hydrate(v);
+  const g = v.querySelector(".gallery"), gc = $("#gcount");
+  if(g && gc) g.addEventListener("scroll",()=>{ const i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth)); gc.textContent=(Math.min(i,ps.length-1)+1)+" / "+ps.length; },{passive:true});
+  v.querySelector(".back").onclick = ()=>{ const r = recipes().find(x=>x.key===keyOf(b.name)); if(r && backTo!=="log") openRecipe(r.key); else { show(backTo); render(); } };
+  v.querySelector(".edit").onclick = $("#bEdit").onclick = ()=>openForm(b,false);
+  $("#bAgain").onclick = ()=>openForm(b,true);
+  const del=$("#bDel"); let armed=false;
   del.onclick=async()=>{
-    if(!armed){ armed=true; del.classList.add("armed"); del.textContent="Tryk igen for at slette"; setTimeout(()=>{ if(del.isConnected){armed=false;del.classList.remove("armed");del.textContent="Slet";} },4000); return; }
-    try{ await store.remove(b.id); picsOf(b).forEach(id=>photos.del(id).catch(()=>{})); show("log"); render(); }catch(e){ del.textContent="Kunne ikke slette – prøv igen"; }
+    if(!armed){ armed=true; del.classList.add("armed"); del.textContent="Tryk igen"; setTimeout(()=>{ if(del.isConnected){ armed=false; del.classList.remove("armed"); del.textContent="Slet"; } },4000); return; }
+    try{
+      await store.remove(b.id); picsOf(b).forEach(p=>photos.del(p).catch(()=>{}));
+      const r = recipes().find(x=>x.key===keyOf(b.name));
+      if(r && backTo!=="log") openRecipe(r.key); else { show(backTo); render(); }
+    }catch(e){ del.textContent="Prøv igen"; }
   };
-  show("detail");
+  show("bake");
+}
+
+/* ---------- log ---------- */
+function renderLog(){
+  const list = bakes.slice().sort(byNewest);
+  $("#logEmpty").hidden = list.length>0;
+  const box = $("#logRows");
+  box.innerHTML = list.map(b=>`
+    <button class="row" type="button" data-bake="${esc(b.id)}">
+      <span class="th">${picsOf(b)[0]?img(picsOf(b)[0],""):noimg()}</span>
+      <span class="tx"><b>${esc(b.name||"Uden navn")}</b><span>${esc(shortDate(b.date))} · ${kindName(b.kind)}${b.caption?" · "+esc(b.caption):""}</span></span>
+      ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}
+    </button>`).join("");
+  hydrate(box);
+  box.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>{ backTo="log"; openBake(x.dataset.bake); });
 }
 
 /* ---------- form ---------- */
-let editing = null, kind = "bread", ratings = {};
+let editing = null, kind = "bread", ratings = {}, ovenMode = "", picItems = [], rowSeq = 0, formReturn = null;
 function rateUI(){
   $$(".rate").forEach(el=>{
     const key=el.dataset.r;
@@ -614,7 +671,8 @@ function rateUI(){
     el.querySelectorAll("button").forEach(btn=>btn.onclick=()=>{ const v=+btn.dataset.v; ratings[key]= ratings[key]===v?0:v; rateUI(); });
   });
 }
-function flourRow(f={}, i){
+function flourRow(f={}){
+  const i = rowSeq++;
   const row=document.createElement("div"); row.className="flourrow";
   row.innerHTML=`<input type="text" list="flourTypes" aria-label="Meltype" placeholder="Meltype" class="ft" id="ft-${i}" value="${esc(f.type||"")}">
     <input type="number" inputmode="decimal" aria-label="Gram" placeholder="g" class="fg" id="fg-${i}" min="0" value="${esc(f.g??"")}">
@@ -623,26 +681,20 @@ function flourRow(f={}, i){
   row.querySelectorAll("input").forEach(x=>x.addEventListener("input",updateCalc));
   return row;
 }
-let rowSeq=0;
-$("#addFlour").onclick=()=>{ $("#flours").appendChild(flourRow({},rowSeq++)); };
+$("#addFlour").onclick=()=>{ $("#flours").appendChild(flourRow({})); };
 $$("[data-kind]").forEach(b=>b.onclick=()=>{ kind=b.dataset.kind; $$("[data-kind]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); });
-let ovenMode = "";
 function setOven(m){ ovenMode=m||""; $$("[data-oven]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.oven===ovenMode))); }
 $$("[data-oven]").forEach(b=>b.onclick=()=>setOven(ovenMode===b.dataset.oven?"":b.dataset.oven));
-const ovenLabel = m => m==="varmluft"?"varmluft":m==="overunder"?"over-/undervarme":"";
 ["f-water","f-salt","f-starter"].forEach(id=>$("#"+id).addEventListener("input",updateCalc));
-
 function readForm(){
   const flours=$$(".flourrow").map(r=>({type:r.querySelector(".ft").value.trim(), g:n(r.querySelector(".fg").value)})).filter(f=>f.type||f.g);
   const v=id=>{ const x=$("#"+id).value; return x===""?null:n(x); };
   return {
     date:$("#f-date").value, kind, name:$("#f-name").value.trim(), flours,
-    water:v("f-water"), salt:v("f-salt"), starter:v("f-starter"),
-    extras:$("#f-extras").value.trim(),
+    water:v("f-water"), salt:v("f-salt"), starter:v("f-starter"), extras:$("#f-extras").value.trim(),
     bulk:v("f-bulk"), cold:v("f-cold"), proof:v("f-proof"), temp:v("f-temp"), time:v("f-time"), ovenMode,
     overall:ratings.overall||0, rise:ratings.rise||0, crumb:ratings.crumb||0, crust:ratings.crust||0, taste:ratings.taste||0,
-    notes:$("#f-notes").value.trim(),
-    caption:$("#f-caption").value.trim()
+    notes:$("#f-notes").value.trim(), caption:$("#f-caption").value.trim()
   };
 }
 function updateCalc(){
@@ -650,30 +702,56 @@ function updateCalc(){
   $("#c-ino").textContent=pct(c.ino); $("#c-salt").textContent=pct(c.salt);
   $("#c-dough").textContent=c.dough?Math.round(c.dough)+" g":"–";
 }
+async function renderThumbs(){
+  const box = $("#thumbs");
+  box.innerHTML = picItems.map((it,i)=>`<div class="thumb"><img alt="Billede ${i+1}" data-i="${i}"><button type="button" aria-label="Fjern billede ${i+1}" data-rm="${i}">✕</button></div>`).join("");
+  box.querySelectorAll("button[data-rm]").forEach(b=>b.onclick=()=>{ const it = picItems.splice(+b.dataset.rm,1)[0]; if(it && it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} renderThumbs(); });
+  for(const el of box.querySelectorAll("img[data-i]")){ const it = picItems[+el.dataset.i]; try{ el.src = it.url || await photoUrl(it.id) || ""; }catch(e){} }
+  $("#photoLblTxt").textContent = picItems.length ? "Tilføj flere billeder" : "Tilføj billeder";
+}
+function setPics(items){ picItems.forEach(it=>{ if(it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} }); picItems = items.slice(); renderThumbs(); }
+async function shrink(file){
+  try{
+    const bmp = await createImageBitmap(file, {imageOrientation:"from-image"});
+    const sc = Math.min(1, 1600/Math.max(bmp.width,bmp.height));
+    const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width*sc); cv.height = Math.round(bmp.height*sc);
+    cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+    return await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/jpeg",0.85));
+  }catch(e){ return file; }
+}
+$("#f-photo").addEventListener("change", async e=>{
+  const files = Array.from(e.target.files || []); e.target.value=""; if(!files.length) return;
+  $("#photoLblTxt").textContent="Klargør billeder…";
+  for(const f of files){ const blob = await shrink(f); picItems.push({blob, url:URL.createObjectURL(blob)}); }
+  renderThumbs();
+});
 function openForm(b, asNew){
+  formReturn = current==="form" ? formReturn : {view:current, recipe:curRecipe, bake:curBake};
   editing = b && !asNew ? b : null;
-  const src = b || (sorted()[0] ? {flours:[{type:"",g:""}]} : {flours:[{type:"Hvedemel",g:""}]});
-  $("#formTitle").textContent = editing ? "Redigér bagning" : (b ? "Bag igen" : "Ny bagning");
+  const src = b || {flours:[{type:"",g:""}]};
+  $("#formTitle").textContent = editing ? "Redigér" : (b ? "Bag igen" : "Ny bagning");
   $("#f-date").value = editing ? b.date : new Date().toISOString().slice(0,10);
   setOven(src.ovenMode);
   kind = src.kind || "bread"; $$("[data-kind]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.kind===kind)));
   $("#f-name").value = src.name||"";
-  $("#flours").innerHTML=""; (src.flours&&src.flours.length?src.flours:[{}]).forEach(f=>$("#flours").appendChild(flourRow(f,rowSeq++)));
+  $("#flours").innerHTML=""; (src.flours&&src.flours.length?src.flours:[{}]).forEach(f=>$("#flours").appendChild(flourRow(f)));
   const set=(id,val)=>{ $("#"+id).value = val===null||val===undefined?"":val; };
-  set("f-water",src.water); set("f-salt",src.salt); set("f-starter",src.starter);
-  set("f-extras",src.extras); set("f-bulk",src.bulk); set("f-cold",src.cold); set("f-proof",src.proof);
-  set("f-temp",src.temp); set("f-time",src.time);
+  set("f-water",src.water); set("f-salt",src.salt); set("f-starter",src.starter); set("f-extras",src.extras);
+  set("f-bulk",src.bulk); set("f-cold",src.cold); set("f-proof",src.proof); set("f-temp",src.temp); set("f-time",src.time);
   ratings = editing ? {overall:b.overall,rise:b.rise,crumb:b.crumb,crust:b.crust,taste:b.taste} : {};
-  set("f-notes", editing ? b.notes : "");
-  set("f-caption", editing ? b.caption : "");
+  set("f-notes", editing ? b.notes : ""); set("f-caption", editing ? b.caption : "");
   setPics(editing ? picsOf(b).map(id=>({id})) : []);
   $("#formErr").hidden=true;
-  // datalists
   $("#recipes").innerHTML=[...new Set(bakes.map(x=>x.name).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join("");
   $("#flourTypes").innerHTML=[...new Set([...FLOURS,...bakes.flatMap(x=>(x.flours||[]).map(f=>f.type)).filter(Boolean)])].map(x=>`<option value="${esc(x)}">`).join("");
   rateUI(); updateCalc(); show("form");
 }
-$("#cancelForm").onclick=()=>{ editing ? openDetail(editing.id) : show("log"); };
+$("#cancelForm").onclick=()=>{
+  const r = formReturn||{view:"home"};
+  if(r.view==="bake" && r.bake && bakes.some(x=>x.id===r.bake)) openBake(r.bake);
+  else if(r.view==="recipe" && r.recipe) openRecipe(r.recipe);
+  else { show(r.view==="form"?"home":r.view); render(); }
+};
 $("#form").addEventListener("submit",async e=>{
   e.preventDefault();
   const data=readForm(), err=$("#formErr");
@@ -689,80 +767,20 @@ $("#form").addEventListener("submit",async e=>{
       const pid = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
       await photos.put(pid, it.blob); pics.push(pid);
     }
-  }catch(ex){
-    err.textContent = "Billederne kunne ikke gemmes. Måske er telefonen ved at løbe tør for plads.";
-    err.hidden=false; btn.disabled=false; btn.textContent="Gem bagning"; return;
-  }
+  }catch(ex){ err.textContent="Billederne kunne ikke gemmes. Måske er telefonen ved at løbe tør for plads."; err.hidden=false; btn.disabled=false; btn.textContent="Gem bagning"; return; }
   rec.pics = pics; delete rec.photo;
   const oldPics = editing ? picsOf(editing) : [];
-  try{ await store.save(rec);
-    oldPics.filter(id=>!pics.includes(id)).forEach(id=>photos.del(id).catch(()=>{}));
-    setPics([]); render(); openDetail(id); }
-  catch(ex){ err.textContent="Bagningen blev ikke gemt. Prøv at trykke Gem igen."; err.hidden=false; }
-  finally{ btn.disabled=false; btn.textContent="Gem bagning"; }
-});
-
-/* ---------- photos ---------- */
-let picItems = [];   // [{id} existing | {blob,url} new]
-const picsOf = b => Array.isArray(b.pics) ? b.pics : (b.photo ? [b.photo] : []);
-const photoUrls = new Map();
-async function photoUrl(id){
-  if(photoUrls.has(id)) return photoUrls.get(id);
-  const blob = await photos.get(id);
-  if(!blob) return null;
-  const u = URL.createObjectURL(blob); photoUrls.set(id,u); return u;
-}
-function gallery(b){
-  const ids = picsOf(b); if(!ids.length) return "";
-  const alt = esc(b.name||"bagningen");
-  return `<div class="gwrap"><div class="gallery">${ids.map((id,i)=>`<img data-photo="${esc(id)}" alt="Billede ${i+1} af ${alt}" loading="lazy">`).join("")}</div>${ids.length>1?`<span class="gcount">1/${ids.length}</span>`:""}</div>`;
-}
-function wireImgs(root){
-  root.querySelectorAll("img[data-photo]").forEach(async img=>{
-    try{ const u = await photoUrl(img.dataset.photo); if(u) img.src = u; else img.remove(); }catch(e){ img.remove(); }
-  });
-  root.querySelectorAll(".gwrap").forEach(w=>{
-    const g = w.querySelector(".gallery"), c = w.querySelector(".gcount"); if(!c) return;
-    const total = g.children.length;
-    g.addEventListener("scroll",()=>{ const i = Math.round(g.scrollLeft / Math.max(1,g.clientWidth)); c.textContent = (Math.min(i,total-1)+1) + "/" + total; },{passive:true});
-    g.addEventListener("click",e=>{ if(Math.abs(g.scrollLeft % Math.max(1,g.clientWidth))>8) e.stopPropagation(); });
-  });
-}
-async function renderThumbs(){
-  const box = $("#thumbs");
-  box.innerHTML = picItems.map((it,i)=>`<div class="thumb"><img alt="Billede ${i+1}" data-i="${i}"><button type="button" aria-label="Fjern billede ${i+1}" data-rm="${i}">✕</button></div>`).join("");
-  box.querySelectorAll("button[data-rm]").forEach(b=>b.onclick=()=>{ const it = picItems.splice(+b.dataset.rm,1)[0]; if(it && it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} renderThumbs(); });
-  for(const img of box.querySelectorAll("img[data-i]")){
-    const it = picItems[+img.dataset.i];
-    try{ img.src = it.url || await photoUrl(it.id) || ""; }catch(e){}
-  }
-  $("#photoLblTxt").textContent = picItems.length ? "Tilføj flere billeder" : "Tilføj billeder";
-}
-function setPics(items){
-  picItems.forEach(it=>{ if(it.url) try{ URL.revokeObjectURL(it.url); }catch(e){} });
-  picItems = items.slice(); renderThumbs();
-}
-async function shrink(file){
   try{
-    const bmp = await createImageBitmap(file, {imageOrientation:"from-image"});
-    const sc = Math.min(1, 1600/Math.max(bmp.width,bmp.height));
-    const cv = document.createElement("canvas");
-    cv.width = Math.round(bmp.width*sc); cv.height = Math.round(bmp.height*sc);
-    cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
-    return await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/jpeg",0.85));
-  }catch(e){ return file; }
-}
-$("#f-photo").addEventListener("change", async e=>{
-  const files = Array.from(e.target.files || []); e.target.value="";
-  if(!files.length) return;
-  $("#photoLblTxt").textContent="Klargør billeder…";
-  for(const f of files){ const blob = await shrink(f); picItems.push({blob, url:URL.createObjectURL(blob)}); }
-  renderThumbs();
+    await store.save(rec);
+    oldPics.filter(p=>!pics.includes(p)).forEach(p=>photos.del(p).catch(()=>{}));
+    setPics([]); backTo = backTo==="log"?"log":"home"; openBake(id);
+  }catch(ex){ err.textContent="Bagningen blev ikke gemt. Prøv at trykke Gem igen."; err.hidden=false; }
+  finally{ btn.disabled=false; btn.textContent="Gem bagning"; }
 });
 
 /* ---------- backup ---------- */
 $("#backupBtn").onclick = () => { $("#backupMsg").textContent=""; show("backup"); };
-$("#backupBack").onclick = () => show("log");
+$("#backupBack").onclick = () => { show("log"); render(); };
 const blobToDataUrl = b => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsDataURL(b); });
 async function dataUrlToBlob(u){ return await (await fetch(u)).blob(); }
 $("#exportBtn").onclick = async () => {
@@ -791,17 +809,28 @@ $("#importFile").addEventListener("change", async e => {
     if(!data || data.app!=="surdejsloggen" || !Array.isArray(data.bakes)) throw new Error("format");
     for(const [id,u] of Object.entries(data.photos||{})) await photos.put(id, await dataUrlToBlob(u));
     for(const b of data.bakes){ if(b && b.id) await store.save(b); }
-    render();
     msg.className="ok"; msg.textContent = data.bakes.length + (data.bakes.length===1?" bagning":" bagninger") + " indlæst.";
   }catch(err){ msg.className="err"; msg.textContent="Filen kunne ikke læses. Vælg en backup-fil fra Surdejsloggen."; }
 });
 
-if("serviceWorker" in navigator){ window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
-
-function render(){
-  renderLog();
+/* ---------- start ---------- */
+function render(){ if(current==="home") renderHome(); if(current==="log") renderLog(); }
+$("#skipInstall").onclick = () => { lsSet("installSkipped","1"); show("home"); renderHome(); };
+async function init(){
+  try{
+    idb = await openDB();
+    bakes = await tx("bakes","readonly",s=>s.getAll()) || [];
+    for(const ex of bakes.filter(b=>b.example)) await store.remove(ex.id);
+  }catch(e){
+    $("#homeEmpty").innerHTML = "<h2>Appen kan ikke gemme</h2><p>Telefonen tillader ikke, at appen gemmer data. Slå privat browsing fra, eller installér appen på hjemmeskærmen.</p>";
+  }
+  renderHome();
+  if(!isStandalone() && !lsGet("installSkipped")) show("install");
+  hideSplash();
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 }
 init();
+if("serviceWorker" in navigator){ window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
 })();
 </script>
 </body>
