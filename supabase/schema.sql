@@ -148,3 +148,8 @@ grant update (display_name) on public.profiles to authenticated;
 -- (oprettet direkte i Supabase; se migrationen "avatars_and_push").
 -- Hemmelige nøgler (VAPID og hook-secret) ligger i Supabase Vault og er ikke i denne fil.
 -- Edge function "push" sender beskederne: supabase/functions/push/index.ts
+
+-- ---------- kommentarer ----------
+-- Tabel public.comments (migration "comments"): man kan læse og skrive kommentarer på
+-- bagninger, man må se; man kan slette sine egne og alle kommentarer på sine egne bagninger.
+-- Trigger push_on_comment giver ejeren af bagningen en push-besked.

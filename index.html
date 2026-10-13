@@ -272,6 +272,22 @@ h1,h2,h3,legend,.tile b,.ptitle,#splash .word,.brand h1{text-transform:none;lett
 .photobtn,.tile.add .pic{border:1.5px dashed var(--line)}
 nav.menu button{font-weight:500}
 .stamp{font-weight:700}
+/* ---------- kommentarer ---------- */
+.cbtn{display:flex;align-items:center;gap:6px;background:none;border:0;border-top:1px solid var(--line);padding:10px 14px;font-size:.82rem;color:var(--muted);cursor:pointer;width:100%;text-align:left}
+.cbtn svg{width:18px;height:18px}
+.comments{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:16px;margin-top:4px}
+.comments h2{font-size:1.3rem}
+.cmlist{display:flex;flex-direction:column;gap:10px}
+.cm{display:flex;gap:10px;align-items:flex-start}
+.cm .av{width:34px;height:34px;font-size:.85rem;flex:none}
+.cm .bub{flex:1;min-width:0;background:var(--surf);border-radius:14px;padding:8px 12px}
+.cm .cmtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.75rem;color:var(--muted)}
+.cm .cmtop b{color:var(--ink);font-size:.85rem}
+.cm p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem}
+.cm .del{background:none;border:0;color:var(--muted);font-size:.72rem;text-decoration:underline;cursor:pointer;padding:0}
+form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
+.cmform textarea{min-height:46px;flex:1;resize:none;padding:12px}
+.cmform .btn{padding:12px 16px}
 </style>
 </head>
 <body>
@@ -593,7 +609,11 @@ function realApi(){
     async removeAvatar(path){ if(path) await sb.storage.from("avatars").remove([path]); },
     async setAvatar(myId, path){ const { error } = await sb.from("profiles").update({ avatar:path }).eq("id", myId); fail(error); },
     async savePush(s){ await sb.from("push_subscriptions").delete().eq("endpoint", s.endpoint); const { error } = await sb.from("push_subscriptions").insert(s); fail(error); },
-    async deletePush(endpoint){ await sb.from("push_subscriptions").delete().eq("endpoint", endpoint); }
+    async deletePush(endpoint){ await sb.from("push_subscriptions").delete().eq("endpoint", endpoint); },
+    async comments(bakeId){ const { data, error } = await sb.from("comments").select("id,bake_id,user_id,body,created_at").eq("bake_id", bakeId).order("created_at"); fail(error); return data||[]; },
+    async commentCounts(ids){ if(!ids.length) return {}; const { data, error } = await sb.from("comments").select("bake_id").in("bake_id", ids); fail(error); const o={}; (data||[]).forEach(r=>{ o[r.bake_id]=(o[r.bake_id]||0)+1; }); return o; },
+    async addComment(bakeId, body, myId){ const { data, error } = await sb.from("comments").insert({ bake_id:bakeId, body, user_id:myId }).select("id,bake_id,user_id,body,created_at").single(); fail(error); return data; },
+    async deleteComment(id){ const { error } = await sb.from("comments").delete().eq("id", id); fail(error); }
   };
 }
 
@@ -609,6 +629,10 @@ function demoApi(){
     {id:"x3",user_id:"u1",date:"2026-10-10",name:"Landbrød",kind:"bread",overall:4,caption:"Sprød skorpe og pæn åben krumme.",pics:["d/1"],data:{flours:[{type:"Hvedemel",g:400},{type:"Fuldkornshvedemel",g:100}],water:350,starter:100,salt:10,time:45,temp:250,ovenMode:"overunder",created:3}},
     {id:"x4",user_id:"u1",date:"2026-10-03",name:"Speltboller",kind:"buns",overall:5,caption:"",pics:["d/3"],data:{flours:[{type:"Spelt",g:300},{type:"Hvedemel",g:200}],water:300,starter:75,salt:10,time:18,temp:220,created:2}}
   ];
+  let cid = 100, comments = [
+    {id:1,bake_id:"x1",user_id:"u3",body:"Den ser fantastisk ud! Hvor meget rug brugte du?",created_at:new Date(Date.now()-3*3600e3).toISOString()},
+    {id:2,bake_id:"x1",user_id:"u2",body:"600 g fuldkornsrug og 200 g almindelig rugmel 🙂",created_at:new Date(Date.now()-2*3600e3).toISOString()},
+    {id:3,bake_id:"x3",user_id:"u2",body:"Flot åben krumme!",created_at:new Date(Date.now()-26*3600e3).toISOString()}];
   let session = lsGet("demoIn") ? { user:{ id:"u1" } } : null; let cb = ()=>{};
   return {
     onAuth: f => { cb=f; },
@@ -630,6 +654,10 @@ function demoApi(){
     async request(a,b){ friends.push({id:fid++,requester:a,addressee:b,status:"pending"}); },
     async accept(id){ friends.find(f=>f.id===id).status="accepted"; },
     async removeFriendship(id){ friends=friends.filter(f=>f.id!==id); },
+    async comments(bakeId){ return comments.filter(c=>c.bake_id===bakeId); },
+    async commentCounts(ids){ const o={}; comments.forEach(c=>{ if(ids.includes(c.bake_id)) o[c.bake_id]=(o[c.bake_id]||0)+1; }); return o; },
+    async addComment(bakeId, body, myId){ const c={id:cid++, bake_id:bakeId, user_id:myId, body, created_at:new Date().toISOString()}; comments.push(c); return c; },
+    async deleteComment(id){ comments=comments.filter(c=>c.id!==id); },
     async uploadAvatar(path, blob){ imgs["av:"+path]=URL.createObjectURL(blob); },
     async removeAvatar(){},
     async setAvatar(id, path){ const p=people.find(x=>x.id===id); p.avatar=imgs["av:"+path]; },
@@ -643,6 +671,7 @@ let me = null;            // {id, username, display_name}
 let bakes = [];           // all visible (mine + friends)
 let people = new Map();   // id -> profile
 let friendships = [];
+let commentCounts = {};
 const mine = () => bakes.filter(b=>b.user_id===me.id);
 const personOf = id => people.get(id) || {id, username:"?", display_name:""};
 const nameOf = p => p.display_name || p.username;
@@ -650,6 +679,7 @@ const nameOf = p => p.display_name || p.username;
 async function loadAll(){
   const [bs, fs] = await Promise.all([api.bakes(), api.friendships()]);
   bakes = bs; friendships = fs;
+  try{ commentCounts = await api.commentCounts(bs.slice(0,150).map(b=>b.id)); }catch(e){ commentCounts = {}; }
   const ids = [...new Set([me.id, ...bs.map(b=>b.user_id), ...fs.flatMap(f=>[f.requester,f.addressee])])].filter(id=>!people.has(id));
   (await api.profiles(ids)).forEach(p=>people.set(p.id,p));
   updateBadge();
@@ -819,6 +849,7 @@ if("serviceWorker" in navigator){ navigator.serviceWorker.addEventListener("mess
 function goHash(url){
   const h = String(url).split("#")[1]||"";
   if(h==="venner"){ backTo="friends"; show("friends"); renderFriends(); }
+  else if(h.startsWith("bake-")){ backTo="feed"; loadAll().catch(()=>{}).then(()=>{ if(bakes.some(b=>b.id===h.slice(5))) openBake(h.slice(5)); else { show("feed"); renderFeed(); } }); }
   else { backTo="feed"; show("feed"); loadAll().then(renderFeed).catch(()=>renderFeed()); }
 }
 $("#newPassBtn").onclick = async ()=>{
@@ -841,6 +872,7 @@ async function enter(session){
   }catch(e){ toast("Kunne ikke hente data. Tjek din forbindelse."); }
   entering = false;
   if(START_HASH==="#venner"){ backTo="friends"; show("friends"); renderFriends(); }
+  else if(START_HASH.startsWith("#bake-") && bakes.some(b=>b.id===START_HASH.slice(6))){ backTo="feed"; show("feed"); renderFeed(); openBake(START_HASH.slice(6)); }
   else { backTo="feed"; show("feed"); renderFeed(); }
   if(START_HASH && !DEMO) try{ history.replaceState(null,"",location.pathname); }catch(e){}
   await checkMigration(); pushBanner();
@@ -865,10 +897,12 @@ function renderFeed(){
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
       ${galleryHtml(picsOf(b), b.name||"bagningen")}
       <button class="pbody" type="button" data-bake="${esc(b.id)}"><span class="ptitle">${esc(b.name||"Uden navn")}</span>${b.caption?`<p class="cap">${esc(b.caption)}</p>`:""}<span class="ticket">${tick.map(t=>`<span>${esc(t)}</span>`).join("")}</span></button>
+      <button class="cbtn" type="button" data-cm="${esc(b.id)}">${bubbleSvg}${commentCounts[b.id] ? commentCounts[b.id]+(commentCounts[b.id]===1?" kommentar":" kommentarer") : "Skriv en kommentar"}</button>
     </article>`;
   }).join("");
   hydrate(box); wireGallery(box);
   box.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>{ backTo="feed"; openBake(x.dataset.bake); });
+  box.querySelectorAll("[data-cm]").forEach(x=>x.onclick=()=>{ backTo="feed"; openBake(x.dataset.cm, true); });
 }
 
 /* ---------- my recipes ---------- */
@@ -951,7 +985,7 @@ function openRecipe(key){
 }
 
 /* ---------- bake page ---------- */
-function openBake(id){
+function openBake(id, focusComment){
   const b = bakes.find(x=>x.id===id); if(!b){ show(backTo); render(); return; }
   curBake = id;
   const own = b.user_id===me.id, p = personOf(b.user_id), c = calc(b), ps = picsOf(b);
@@ -983,6 +1017,15 @@ function openBake(id){
         <button class="btn primary" type="button" id="bAgain">${own?"Bag igen":"Bag den selv"}</button>
         ${own?`<button class="btn" type="button" id="bEdit">Redigér</button><button class="btn danger" type="button" id="bDel">Slet</button>`:""}
       </div>
+      <div class="comments">
+        <h2>Kommentarer</h2>
+        <div class="cmlist" id="cmList"><p class="muted" style="margin:0">Henter kommentarer…</p></div>
+        <form class="cmform" id="cmForm" novalidate>
+          <label class="vh" for="cmText">Skriv en kommentar</label>
+          <textarea id="cmText" rows="1" maxlength="1000" placeholder="Skriv en kommentar…"></textarea>
+          <button class="btn primary" type="submit" id="cmSend">Send</button>
+        </form>
+      </div>
     </div>`;
   hydrate(v); wireGallery(v);
   const goBack = ()=>{ const r = recipes().find(x=>x.key===keyOf(b.name)); if(own && backTo==="home" && r) openRecipe(r.key); else { show(backTo); render(); } };
@@ -999,6 +1042,37 @@ function openBake(id){
     };
   }
   show("bake");
+  loadComments(b, focusComment);
+}
+const bubbleSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+const ago = iso => { const d=(Date.now()-Date.parse(iso))/1000; if(d<60) return "lige nu"; if(d<3600) return Math.floor(d/60)+" min"; if(d<86400) return Math.floor(d/3600)+" t"; if(d<7*86400) return Math.floor(d/86400)+" d"; try{ return new Date(iso).toLocaleDateString("da-DK",{day:"numeric",month:"short"}); }catch(e){ return ""; } };
+async function loadComments(b, focus){
+  const list=$("#cmList"), form=$("#cmForm"), txt=$("#cmText");
+  const draw = () => {
+    list.innerHTML = cs.length ? cs.map(c=>{ const p=personOf(c.user_id); const canDel = c.user_id===me.id || b.user_id===me.id;
+      return `<div class="cm">${av(p)}<div class="bub"><div class="cmtop"><span><b>${esc(c.user_id===me.id?"Dig":nameOf(p))}</b> · ${esc(ago(c.created_at))}</span>${canDel?`<button class="del" type="button" data-del="${c.id}">Slet</button>`:""}</div><p>${esc(c.body)}</p></div></div>`; }).join("")
+      : '<p class="muted" style="margin:0">Ingen kommentarer endnu. Skriv den første.</p>';
+    list.querySelectorAll("[data-del]").forEach(x=>{ let armed=false; x.onclick=async()=>{
+      if(!armed){ armed=true; x.textContent="Sikker?"; setTimeout(()=>{ if(x.isConnected){ armed=false; x.textContent="Slet"; } },4000); return; }
+      try{ await api.deleteComment(+x.dataset.del); cs=cs.filter(c=>c.id!==+x.dataset.del); commentCounts[b.id]=cs.length; draw(); }catch(e){ toast("Kommentaren kunne ikke slettes."); } }; });
+  };
+  let cs=[];
+  try{
+    cs = await api.comments(b.id);
+    const missing=[...new Set(cs.map(c=>c.user_id))].filter(id=>!people.has(id));
+    if(missing.length) (await api.profiles(missing)).forEach(p=>people.set(p.id,p));
+  }catch(e){ list.innerHTML='<p class="err">Kommentarerne kunne ikke hentes. Tjek din forbindelse.</p>'; }
+  if(curBake!==b.id) return;
+  draw(); commentCounts[b.id]=cs.length;
+  txt.addEventListener("input",()=>{ txt.style.height="auto"; txt.style.height=Math.min(txt.scrollHeight,160)+"px"; });
+  form.onsubmit = async e=>{
+    e.preventDefault(); const body=txt.value.trim(); if(!body) return;
+    const btn=$("#cmSend"); btn.disabled=true;
+    try{ const c = await api.addComment(b.id, body, me.id); cs.push(c); txt.value=""; txt.style.height="auto"; commentCounts[b.id]=cs.length; draw(); }
+    catch(ex){ toast("Kommentaren blev ikke sendt. Prøv igen."); }
+    btn.disabled=false;
+  };
+  if(focus){ form.scrollIntoView({block:"center"}); setTimeout(()=>txt.focus(),300); }
 }
 
 /* ---------- friends ---------- */
