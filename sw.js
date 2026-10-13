@@ -1,6 +1,6 @@
 // Surdejsloggen – gør appen tilgængelig uden internet.
 // Hæv versionsnummeret, når du lægger en ny udgave op, så telefonerne henter den.
-const CACHE = "surdejsloggen-v6";
+const CACHE = "surdejsloggen-v7";
 const FILES = [
   "./",
   "./index.html",
@@ -10,10 +10,10 @@ const FILES = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
-  "./fonts/big-shoulders-display-latin-700-normal.woff2",
-  "./fonts/big-shoulders-display-latin-900-normal.woff2",
-  "./fonts/courier-prime-latin-400-normal.woff2",
-  "./fonts/courier-prime-latin-700-normal.woff2"
+  "./fonts/dm-serif-display-latin-400-normal.woff2",
+  "./fonts/dm-sans-latin-400-normal.woff2",
+  "./fonts/dm-sans-latin-500-normal.woff2",
+  "./fonts/dm-sans-latin-700-normal.woff2"
 ];
 
 self.addEventListener("install", e => {

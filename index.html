@@ -13,20 +13,20 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="preload" href="fonts/courier-prime-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="fonts/big-shoulders-display-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/dm-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/dm-serif-display-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-@font-face{font-family:"Big Shoulders Display";font-weight:700;font-display:swap;src:url("fonts/big-shoulders-display-latin-700-normal.woff2") format("woff2")}
-@font-face{font-family:"Big Shoulders Display";font-weight:900;font-display:swap;src:url("fonts/big-shoulders-display-latin-900-normal.woff2") format("woff2")}
-@font-face{font-family:"Courier Prime";font-weight:400;font-display:swap;src:url("fonts/courier-prime-latin-400-normal.woff2") format("woff2")}
-@font-face{font-family:"Courier Prime";font-weight:700;font-display:swap;src:url("fonts/courier-prime-latin-700-normal.woff2") format("woff2")}
+@font-face{font-family:"DM Serif Display";font-weight:400;font-display:swap;src:url("fonts/dm-serif-display-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"DM Sans";font-weight:400;font-display:swap;src:url("fonts/dm-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"DM Sans";font-weight:500;font-display:swap;src:url("fonts/dm-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"DM Sans";font-weight:700;font-display:swap;src:url("fonts/dm-sans-latin-700-normal.woff2") format("woff2")}
 
-/* Layout: 7a "Mel & creme". Feed (venner) · Opskrifter (store fliser) · Ny bagning · Venner. Fast menu i bunden. Ét lyst look. */
+/* Layout: 7a "Mel & creme", stil 6 "Moderne serif" (DM Serif Display + DM Sans, bløde skygger). Feed (venner) · Opskrifter (store fliser) · Ny bagning · Venner. Fast menu i bunden. Ét lyst look. */
 :root{
-  --bg:#EFE9DF; --surf:#FFFFFF; --ink:#2A211A; --muted:#5E4E3E; --line:rgba(42,33,26,.18); --soft:rgba(42,33,26,.12);
+  --bg:#EFE9DF; --surf:#FFFFFF; --ink:#2A211A; --muted:#66584A; --line:rgba(42,33,26,.13); --soft:rgba(42,33,26,.12); --shadow:0 8px 22px rgba(42,33,26,.08);
   --stamp:#B5452A; --ph:#E2D6C2; --accent:#B5452A; --good:#3E6B45;
-  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
-  --body:"Courier Prime","Courier New",ui-monospace,monospace;
+  --display:"DM Serif Display",Georgia,"Times New Roman",serif;
+  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -259,6 +259,19 @@ nav.menu button.new[aria-current="page"] .plus{background:#93361F}
 .me label.avpick:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 .pushbox{display:flex;flex-direction:column;gap:8px}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surf);padding:10px 16px;border-radius:999px;font-size:.85rem;z-index:50;max-width:90vw;text-align:center}
+/* ---------- stil 6: moderne serif ---------- */
+h1,h2,h3,legend,.tile b,.ptitle,#splash .word,.brand h1{text-transform:none;letter-spacing:-.01em;font-weight:400}
+.phead h1{font-size:1.95rem}.sheet h1{font-size:2rem}.tile b{font-size:1.15rem}.ptitle{font-size:1.3rem}.section h2{font-size:1.3rem}legend{font-size:1.2rem}
+.tile .pic,.post,.stats,.empty,.banner,.calc,.authcard,.card{box-shadow:var(--shadow)}
+.btn{border-width:1px;border-color:var(--line)}.btn.primary{border-color:var(--accent)}.btn.danger{border-color:var(--stamp)}
+.smallbtn{border-width:1px;border-color:var(--line)}
+.av{border:1px solid var(--line)}
+.tab[aria-pressed="true"]{border-bottom-color:var(--accent)}
+.ticket{text-transform:none;letter-spacing:0}
+.seg button[aria-pressed="true"],.pills button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.photobtn,.tile.add .pic{border:1.5px dashed var(--line)}
+nav.menu button{font-weight:500}
+.stamp{font-weight:700}
 </style>
 </head>
 <body>
