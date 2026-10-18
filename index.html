@@ -416,7 +416,7 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
         <button type="button" data-auth="up" aria-pressed="false">Opret konto</button>
       </div>
       <form id="authForm" novalidate>
-        <label class="f" for="a-user" data-up hidden>Brugernavn <span class="u">3–24 tegn: a–z, 0–9, . og _</span><input type="text" id="a-user" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="fx kasper.bager"></label>
+        <label class="f" for="a-user" data-up hidden>Brugernavn <span class="u">3–24 tegn: a–å, 0–9, . og _</span><input type="text" id="a-user" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="fx kasper.bager"></label>
         <label class="f" for="a-name" data-up hidden>Dit navn<input type="text" id="a-name" autocomplete="name" placeholder="fx Kasper"></label>
         <label class="f" for="a-email">E-mail<input type="email" id="a-email" autocomplete="email" autocapitalize="none" inputmode="email"></label>
         <label class="f" for="a-pass">Adgangskode <span class="u" data-up hidden>mindst 6 tegn</span><input type="password" id="a-pass" autocomplete="current-password"></label>
@@ -963,7 +963,7 @@ $("#authForm").addEventListener("submit", async e=>{
   try{
     if(authMode==="up"){
       const username=$("#a-user").value.trim().toLowerCase(), name=$("#a-name").value.trim();
-      if(!/^[a-z0-9_.]{3,24}$/.test(username)){ throw {message:"Brugernavnet skal være 3–24 tegn og må kun indeholde a–z, 0–9, punktum og bundstreg.", own:true}; }
+      if(!/^[a-z0-9_.æøå]{3,24}$/.test(username)){ throw {message:"Brugernavnet skal være 3–24 tegn og må kun indeholde a–å (også æ, ø og å), 0–9, punktum og bundstreg.", own:true}; }
       if(pass.length<6) throw {message:"Adgangskoden skal være på mindst 6 tegn.", own:true};
       if(!(await api.usernameAvailable(username))) throw {message:`Brugernavnet “${username}” er taget. Prøv et andet.`, own:true};
       const r = await api.signUp({email, password:pass, username, display_name:name});
@@ -1370,7 +1370,7 @@ function openBake(id, focusComment, ret){
 }
 const bubbleSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 /* ---------- tags (@brugernavn) ---------- */
-const MENTION_RE = /(^|[^a-z0-9_.@])@([a-z0-9_.]{3,24})/gi;
+const MENTION_RE = /(^|[^a-z0-9_.æøå@])@([a-z0-9_.æøå]{3,24})/gi;
 function rich(text){
   return esc(text).replace(MENTION_RE, (m, pre, u)=>{ const t=u.replace(/\.+$/,""), rest=u.slice(t.length); return t.length>=3 ? `${pre}<span class="mention" data-user="${t.toLowerCase()}">@${t}</span>${rest}` : m; });
 }
@@ -1398,7 +1398,7 @@ function attachMentions(ta, box, cands){
   };
   const check = () => {
     const before = ta.value.slice(0, ta.selectionStart);
-    const m = before.match(/(^|[^a-z0-9_.@])@([a-z0-9_.]{0,24})$/i);
+    const m = before.match(/(^|[^a-z0-9_.æøå@])@([a-z0-9_.æøå]{0,24})$/i);
     if(!m){ hide(); return; }
     const q = m[2].toLowerCase(); start = before.length - m[2].length - 1;
     hits = cands().filter(p=>p.username.startsWith(q) || (p.display_name||"").toLowerCase().split(/\s+/).some(w=>w.startsWith(q)))

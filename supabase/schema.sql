@@ -166,3 +166,6 @@ grant update (display_name) on public.profiles to authenticated;
 -- Migration "mentions_push": triggers push_on_bake_tag og push_on_comment_tag, når en tekst
 -- med @ bliver rettet. Edge function "push" finder nye @brugernavne og sender kun til folk,
 -- der må se bagningen (ejeren og ejerens venner).
+
+-- ---------- brugernavne med æ, ø og å ----------
+-- Migration "username_aeoeaa": profiles_username_check er nu '^[a-z0-9_.æøå]{3,24}$'.

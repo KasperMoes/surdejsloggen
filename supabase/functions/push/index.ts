@@ -27,7 +27,7 @@ const short = (t: string, n = 120) => { t = String(t || "").trim(); return t.len
 // @brugernavn i en tekst → sæt af brugernavne (små bogstaver)
 function mentions(text: string | null | undefined): Set<string> {
   const out = new Set<string>();
-  const re = /(^|[^a-z0-9_.@])@([a-z0-9_.]{3,24})/gi;
+  const re = /(^|[^a-z0-9_.æøå@])@([a-z0-9_.æøå]{3,24})/gi;
   let m;
   while ((m = re.exec(String(text || "")))) out.add(m[2].replace(/\.+$/, "").toLowerCase());
   return out;
