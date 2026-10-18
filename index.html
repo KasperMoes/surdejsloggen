@@ -447,7 +447,7 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
   <div class="top">
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
-      <label for="q"><b>Søg i dine bagninger</b><input id="q" type="search" placeholder="Opskrift · mel · tekst" autocomplete="off"></label>
+      <label for="q"><b>Søg i dine bagninger</b><input id="q" type="search" placeholder="Navn · mel · tekst" autocomplete="off"></label>
     </div>
     <div class="tabs" role="group" aria-label="Filtrér">
       <button class="tab" data-f="all" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>Alle</button>
@@ -459,7 +459,6 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
           <option value="new">Senest bagt</option>
           <option value="best">Flest stjerner</option>
           <option value="worst">Færrest stjerner</option>
-          <option value="count">Flest bagninger</option>
           <option value="az">Navn A–Å</option>
         </select>
       </div>
@@ -468,8 +467,8 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
   <div class="sortlbl" id="sortLbl" hidden></div>
   <div class="grid" id="grid"></div>
   <div class="empty" id="homeEmpty" hidden>
-    <h2>Ingen opskrifter endnu</h2>
-    <p>Log din første bagning. Bagninger med samme navn samles som én opskrift her.</p>
+    <h2>Ingen bagninger endnu</h2>
+    <p>Log din første bagning, så kommer den her.</p>
     <button class="btn primary" type="button" data-new>+ Ny bagning</button>
   </div>
 </section>
@@ -532,7 +531,7 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
           </div>
         </div>
       </div>
-      <label class="f" for="f-name">Opskriftens navn <span class="u">Samme navn samler bagningerne under én opskrift</span><input type="text" id="f-name" list="recipes" placeholder="fx Landbrød, Speltboller" autocomplete="off"></label>
+      <label class="f" for="f-name">Navn <span class="u">Flere bagninger må gerne hedde det samme</span><input type="text" id="f-name" list="recipes" placeholder="fx Landbrød, Speltboller" autocomplete="off"></label>
       <datalist id="recipes"></datalist>
     </fieldset>
     <fieldset>
@@ -751,6 +750,7 @@ function demoApi(){
     {id:"x1",user_id:"u2",date:"2026-10-12",name:"Rugbrød med solsikke",kind:"bread",overall:5,caption:"Endelig et rugbrød der ikke er klægt i midten! 18 timer i køleskabet gjorde forskellen.",pics:["d/4","d/2"],data:{flours:[{type:"Fuldkornsrugmel",g:600},{type:"Rugmel",g:200}],water:700,starter:150,salt:16,time:75,temp:180,ovenMode:"overunder",created:5}},
     {id:"x2",user_id:"u3",date:"2026-10-11",name:"Speltboller",kind:"buns",overall:4,caption:"Søndagsboller til hele familien.",pics:["d/3"],data:{flours:[{type:"Spelt",g:500}],water:330,starter:100,salt:10,time:18,temp:220,ovenMode:"varmluft",created:4}},
     {id:"x3",user_id:"u1",date:"2026-10-10",name:"Landbrød",kind:"bread",overall:4,caption:"Sprød skorpe og pæn åben krumme.",pics:["d/1"],data:{flours:[{type:"Hvedemel",g:400},{type:"Fuldkornshvedemel",g:100}],water:350,starter:100,salt:10,time:45,temp:250,ovenMode:"overunder",created:3}},
+    {id:"x5",user_id:"u1",date:"2026-09-26",name:"Landbrød",kind:"bread",overall:3,caption:"Lidt fladt – for lang efterhævning.",pics:["d/2"],data:{flours:[{type:"Hvedemel",g:450},{type:"Rugmel",g:50}],water:360,starter:100,salt:10,time:45,temp:250,ovenMode:"overunder",created:1}},
     {id:"x4",user_id:"u1",date:"2026-10-03",name:"Speltboller",kind:"buns",overall:5,caption:"",pics:["d/3"],data:{flours:[{type:"Spelt",g:300},{type:"Hvedemel",g:200}],water:300,starter:75,salt:10,time:18,temp:220,created:2}}
   ];
   let cid = 100, comments = [
@@ -1198,31 +1198,31 @@ function recipes(){
     return r;
   });
 }
-function matches(r){
-  if(filter==="bread" && r.kind!=="bread") return false;
-  if(filter==="buns" && r.kind!=="buns") return false;
-  if(filter==="five" && r.best<5) return false;
+function matches(b){
+  if(filter==="bread" && b.kind!=="bread") return false;
+  if(filter==="buns" && b.kind!=="buns") return false;
+  if(filter==="five" && n(b.overall)<5) return false;
   if(!query) return true;
-  return [r.name, ...r.bakes.flatMap(b=>[b.caption,b.notes,b.extras,...(b.flours||[]).map(f=>f.type), shortDate(b.date)])].join(" ").toLowerCase().includes(query);
+  return [b.name, b.caption, b.notes, b.extras, b.bakedOn, b.foldMethod, ...(b.flours||[]).map(f=>f.type), shortDate(b.date)].join(" ").toLowerCase().includes(query);
 }
 function renderHome(){
   const s = $("#sortSel").value;
-  const cmp = { new:(a,b)=>(b.latest||"").localeCompare(a.latest||""), best:(a,b)=>b.avg-a.avg||b.best-a.best, worst:(a,b)=>(a.avg||9)-(b.avg||9), count:(a,b)=>b.bakes.length-a.bakes.length, az:(a,b)=>a.name.localeCompare(b.name,"da") }[s];
-  const list = recipes().filter(matches).sort(cmp);
+  const cmp = { new:byNewest, best:(a,b)=>n(b.overall)-n(a.overall)||byNewest(a,b), worst:(a,b)=>(n(a.overall)||9)-(n(b.overall)||9)||byNewest(a,b), az:(a,b)=>(a.name||"").localeCompare(b.name||"","da")||byNewest(a,b) }[s] || byNewest;
+  const list = mine().filter(matches).sort(cmp);
   const has = mine().length>0;
   $("#homeEmpty").hidden = has;
   const grid = $("#grid");
   if(!has){ grid.innerHTML=""; return; }
-  grid.innerHTML = list.map(r=>`
-    <button class="tile" type="button" data-recipe="${esc(r.key)}">
-      <span class="pic">${r.cover?img(r.cover,"Billede af "+r.name):noimg()}
-        ${r.avg?`<span class="stamp" style="--rot:${rot(r.key)}deg" aria-label="Gennemsnit ${dec(r.avg)} stjerner">${dec(r.avg)}</span>`:""}
+  grid.innerHTML = list.map(b=>`
+    <button class="tile" type="button" data-bake="${esc(b.id)}">
+      <span class="pic">${picsOf(b)[0]?img(picsOf(b)[0],"Billede af "+(b.name||"bagningen")):noimg()}
+        ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}
       </span>
-      <b>${esc(r.name)}</b><span class="when">Senest ${esc(shortDate(r.latest))}</span>
+      <b>${esc(b.name||"Uden navn")}</b><span class="when">${esc(shortDate(b.date))}</span>
     </button>`).join("") + `<button class="tile add" type="button" data-new><span class="pic">+ Ny bagning</span></button>` +
-    (list.length ? "" : `<p style="grid-column:1/-1;margin:0;color:var(--muted)">Ingen opskrifter passer til søgningen.</p>`);
+    (list.length ? "" : `<p style="grid-column:1/-1;margin:0;color:var(--muted)">Ingen bagninger passer til søgningen.</p>`);
   hydrate(grid);
-  grid.querySelectorAll("[data-recipe]").forEach(t=>t.onclick=()=>{ backTo="home"; openRecipe(t.dataset.recipe); });
+  grid.querySelectorAll("[data-bake]").forEach(t=>t.onclick=()=>{ backTo="home"; openBake(t.dataset.bake, false, here()); });
 }
 
 /* ---------- recipe page ---------- */
@@ -1376,7 +1376,7 @@ function openBake(id, focusComment, ret){
       </div>
     </div>`;
   hydrate(v); wireGallery(v); wireSocial(v);
-  const goBack = ()=>{ if(bakeRet){ bakeRet(); return; } const r = recipes().find(x=>x.key===keyOf(b.name)); if(own && backTo==="home" && r) openRecipe(r.key); else { show(backTo); render(); } };
+  const goBack = ()=>{ if(bakeRet){ bakeRet(); return; } show(backTo); render(); };
   v.querySelector(".back").onclick = goBack;
   $("#bAgain").onclick = ()=>openForm(b,true);
   if(own){
