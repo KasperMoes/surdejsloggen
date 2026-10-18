@@ -292,6 +292,24 @@ nav.menu button{font-weight:500}
 form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 .cmform textarea{min-height:46px;flex:1;resize:none;padding:12px}
 .cmform .btn{padding:12px 16px}
+/* ---------- billeder i fuld størrelse ---------- */
+.gallery img{cursor:zoom-in}
+.lb{position:fixed;inset:0;z-index:90;background:#0d0a08;display:flex;flex-direction:column;touch-action:none;transition:background .2s}
+.lbtrack{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.lbtrack::-webkit-scrollbar{display:none}
+.lbtrack.locked{overflow:hidden}
+.lbslide{position:relative;flex:0 0 100%;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.lbslide img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:0 0;will-change:transform;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.lbbar{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;justify-content:space-between;align-items:center;color:#fff;pointer-events:none;background:linear-gradient(rgba(0,0,0,.45),transparent)}
+.lbbar>*{pointer-events:auto}
+.lbbar .n{font-size:.85rem;opacity:.85}
+.lbx{width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lbx svg{width:18px;height:18px}
+.lbdots{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;justify-content:center;gap:6px;pointer-events:none}
+.lbdots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}
+.lbdots i.on{background:#fff}
+@media (prefers-reduced-motion:no-preference){ .lb{animation:lbin .18s ease-out} }
+@keyframes lbin{from{opacity:0}to{opacity:1}}
 /* ---------- profiler ---------- */
 [data-uid],[data-user]{cursor:pointer}
 #v-profile{padding-bottom:30px}
@@ -797,10 +815,89 @@ async function hydrate(root){
 }
 function wireGallery(root){
   root.querySelectorAll("[data-gal]").forEach(w=>{
-    const g = w.querySelector(".gallery"), c = w.querySelector(".count"); if(!g||!c) return;
+    const g = w.querySelector(".gallery"); if(!g) return;
+    g.addEventListener("click", e=>{
+      const im = e.target.closest("img"); if(!im || !im.src) return;
+      e.stopPropagation();
+      const list = [...g.querySelectorAll("img")].filter(x=>x.src);
+      openLightbox(list.map(x=>({src:x.src, alt:x.alt})), Math.max(0, list.indexOf(im)));
+    });
+    const c = w.querySelector(".count"); if(!c) return;
     const total = g.children.length;
     g.addEventListener("scroll",()=>{ const i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth)); c.textContent=(Math.min(i,total-1)+1)+" / "+total; },{passive:true});
   });
+}
+
+// Fuld skærm: swipe mellem billeder, knib eller dobbelttryk for at zoome, træk ned eller tryk ✕ for at lukke.
+function openLightbox(items, start){
+  const lb = document.createElement("div"); lb.className="lb"; lb.setAttribute("role","dialog"); lb.setAttribute("aria-modal","true"); lb.setAttribute("aria-label","Billede");
+  lb.innerHTML = `<div class="lbtrack">${items.map(it=>`<div class="lbslide"><img src="${esc(it.src)}" alt="${esc(it.alt||"")}" draggable="false"></div>`).join("")}</div>
+    <div class="lbbar"><span class="n" aria-live="polite"></span><button class="lbx" type="button" aria-label="Luk">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'}</button></div>
+    ${items.length>1?`<div class="lbdots">${items.map(()=>"<i></i>").join("")}</div>`:""}`;
+  document.body.appendChild(lb);
+  const prevOverflow = document.body.style.overflow; document.body.style.overflow="hidden";
+  const track = lb.querySelector(".lbtrack"), num = lb.querySelector(".n"), dots = [...lb.querySelectorAll(".lbdots i")];
+  let idx = start;
+  const setIdx = i => { idx=i; num.textContent = items.length>1 ? (i+1)+" / "+items.length : ""; dots.forEach((d,k)=>d.classList.toggle("on",k===i)); };
+  track.scrollLeft = start*track.clientWidth; setIdx(start);
+  track.addEventListener("scroll",()=>{ const i=Math.round(track.scrollLeft/Math.max(1,track.clientWidth)); if(i!==idx){ resetZoom(); setIdx(Math.min(i,items.length-1)); } },{passive:true});
+  // zoom-tilstand for det aktuelle billede
+  let z = {s:1,x:0,y:0}, im = null;
+  const cur = () => track.children[idx].querySelector("img");
+  const apply = () => { if(im) im.style.transform = `translate(${z.x}px,${z.y}px) scale(${z.s})`; track.classList.toggle("locked", z.s>1.01); };
+  function resetZoom(){ if(im){ im.style.transition="transform .2s"; z={s:1,x:0,y:0}; apply(); const el=im; setTimeout(()=>{ el.style.transition=""; },220); } im=null; z={s:1,x:0,y:0}; track.classList.remove("locked"); }
+  const clamp = () => {
+    if(!im) return; const r = im.parentElement.getBoundingClientRect(), w = im.offsetWidth*z.s, h = im.offsetHeight*z.s;
+    const ox = im.offsetLeft, oy = im.offsetTop;
+    const minX = r.width - w - ox, maxX = -ox, minY = r.height - h - oy, maxY = -oy;
+    if(w<=r.width) z.x = (r.width - w)/2 - ox; else z.x = Math.min(maxX, Math.max(minX, z.x));
+    if(h<=r.height) z.y = (r.height - h)/2 - oy; else z.y = Math.min(maxY, Math.max(minY, z.y));
+  };
+  const zoomAt = (ns, cx, cy) => {
+    im = im || cur(); const r = im.getBoundingClientRect();
+    const px = (cx - r.left)/z.s, py = (cy - r.top)/z.s;   // punkt i billedets egne koordinater
+    const base = im.parentElement.getBoundingClientRect();
+    z.s = Math.max(1, Math.min(5, ns));
+    z.x = cx - base.left - im.offsetLeft - px*z.s; z.y = cy - base.top - im.offsetTop - py*z.s;
+    if(z.s<=1.01){ z={s:1,x:0,y:0}; } else clamp();
+    apply();
+  };
+  let pinch=null, pan=null, down=null, lastTap=0;
+  const dist = t => Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY);
+  const mid = t => [(t[0].clientX+t[1].clientX)/2, (t[0].clientY+t[1].clientY)/2];
+  lb.addEventListener("touchstart", e=>{
+    if(e.target.closest(".lbx")) return;
+    if(e.touches.length===2){ im = im || cur(); pinch={d:dist(e.touches), s:z.s}; pan=null; down=null; }
+    else if(e.touches.length===1){
+      const t=e.touches[0];
+      if(z.s>1.01){ pan={x:t.clientX, y:t.clientY, zx:z.x, zy:z.y}; }
+      else down={x:t.clientX, y:t.clientY, dy:0, vert:null};
+      const now=Date.now();
+      if(now-lastTap<300){ e.preventDefault(); if(z.s>1.01){ im=im||cur(); im.style.transition="transform .2s"; z={s:1,x:0,y:0}; apply(); const el=im; setTimeout(()=>el.style.transition="",220); } else { const el=cur(); el.style.transition="transform .2s"; zoomAt(2.5, t.clientX, t.clientY); setTimeout(()=>el.style.transition="",220); } lastTap=0; down=null; pan=null; return; }
+      lastTap=now;
+    }
+  },{passive:false});
+  lb.addEventListener("touchmove", e=>{
+    if(pinch && e.touches.length===2){ e.preventDefault(); const [cx,cy]=mid(e.touches); zoomAt(pinch.s*dist(e.touches)/pinch.d, cx, cy); return; }
+    if(pan && e.touches.length===1){ e.preventDefault(); const t=e.touches[0]; z.x=pan.zx+(t.clientX-pan.x); z.y=pan.zy+(t.clientY-pan.y); clamp(); apply(); return; }
+    if(down && e.touches.length===1){
+      const t=e.touches[0], dx=t.clientX-down.x, dy=t.clientY-down.y;
+      if(down.vert===null && Math.hypot(dx,dy)>8) down.vert = Math.abs(dy)>Math.abs(dx)*1.2;
+      if(down.vert){ e.preventDefault(); down.dy=dy; const el=cur(); el.style.transform=`translateY(${dy}px)`; lb.style.background=`rgba(13,10,8,${Math.max(.2,1-Math.abs(dy)/400)})`; }
+    }
+  },{passive:false});
+  lb.addEventListener("touchend", e=>{
+    if(pinch && e.touches.length<2){ pinch=null; if(z.s<=1.01) resetZoom(); return; }
+    if(pan && !e.touches.length){ pan=null; return; }
+    if(down && down.vert){ const el=cur(); if(Math.abs(down.dy)>110){ close(); } else { el.style.transition="transform .2s"; el.style.transform=""; lb.style.background=""; setTimeout(()=>el.style.transition="",220); } }
+    down=null;
+  });
+  // computer: rullehjul/pile/esc
+  const key = e=>{ if(e.key==="Escape") close(); if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const i=Math.max(0,Math.min(items.length-1, idx+(e.key==="ArrowRight"?1:-1))); track.scrollTo({left:i*track.clientWidth, behavior:"smooth"}); } };
+  document.addEventListener("keydown", key);
+  function close(){ document.removeEventListener("keydown", key); document.body.style.overflow=prevOverflow; lb.remove(); }
+  lb.querySelector(".lbx").onclick = close;
+  lb.querySelector(".lbx").focus();
 }
 
 /* ---------- navigation ---------- */
