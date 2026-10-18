@@ -292,6 +292,24 @@ nav.menu button{font-weight:500}
 form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 .cmform textarea{min-height:46px;flex:1;resize:none;padding:12px}
 .cmform .btn{padding:12px 16px}
+/* ---------- profiler ---------- */
+[data-uid],[data-user]{cursor:pointer}
+#v-profile{padding-bottom:30px}
+.ptop{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 8px;display:flex;align-items:center;gap:10px}
+.ptop .circle{position:static;flex:none}
+.ptop span{font-size:.85rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:6px 16px 16px}
+.phero .av{width:96px;height:96px;font-size:2.1rem;border-width:2px;margin-bottom:6px}
+.phero h1{font-size:2.1rem;line-height:1.05}
+.phero .meta{margin-top:-2px}
+.phero .rel{margin-top:10px}
+.pstats{margin:0 16px}
+.psec{padding:20px 16px 0}
+.psec h2{font-size:1.4rem;margin:0}
+#v-profile .grid{padding:12px 16px 0}
+#v-profile .empty{margin:12px 16px 0}
+.badge-ok{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--good);font-weight:700}
+.badge-ok svg{width:16px;height:16px}
 /* ---------- tags ---------- */
 .mention{color:var(--accent);font-weight:700}
 .mbox{display:flex;flex-direction:column;background:var(--surf);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
@@ -430,6 +448,7 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 
 <section id="v-recipe" hidden></section>
 <section id="v-bake" hidden></section>
+<section id="v-profile" hidden></section>
 
 <!-- FRIENDS -->
 <section id="v-friends" hidden>
@@ -437,7 +456,7 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
   <div class="section">
     <div class="me">
       <label class="avpick" for="avatarFile"><span class="av" id="meAv"></span><span id="avLbl">Skift billede</span><input type="file" id="avatarFile" accept="image/*" class="vh"></label>
-      <div><b id="meName"></b><div class="meta" id="meUser"></div></div>
+      <div><b id="meName"></b><div class="meta" id="meUser"></div><button class="linkbtn" type="button" id="myProfile" style="font-size:.8rem">Se din profil</button></div>
     </div>
   </div>
   <div class="section" id="pushSec">
@@ -649,6 +668,7 @@ function realApi(){
     async updatePassword(password){ const { error } = await sb.auth.updateUser({ password }); fail(error); },
     async usernameAvailable(name){ const { data, error } = await sb.rpc("username_available", { name }); fail(error); return !!data; },
     async profile(id){ const { data, error } = await sb.from("profiles").select("id,username,display_name,avatar").eq("id", id).maybeSingle(); fail(error); return data; },
+    async profileByUsername(u){ const { data, error } = await sb.from("profiles").select("id,username,display_name,avatar").eq("username", u).maybeSingle(); fail(error); return data; },
     async profiles(ids){ if(!ids.length) return []; const { data, error } = await sb.from("profiles").select("id,username,display_name,avatar").in("id", ids); fail(error); return data||[]; },
     async bakes(){ const { data, error } = await sb.from("bakes").select("*").order("date",{ascending:false}).order("created_at",{ascending:false}).limit(500); fail(error); return (data||[]).map(fromRow); },
     async saveBake(b){ const { error } = await sb.from("bakes").upsert(toRow(b)); fail(error); },
@@ -687,9 +707,9 @@ function realApi(){
 function demoApi(){
   const pic = (c1,c2) => { const cv=document.createElement("canvas"); cv.width=800; cv.height=600; const x=cv.getContext("2d"); x.fillStyle="#E7DCCB"; x.fillRect(0,0,800,600); x.fillStyle=c2; x.beginPath(); x.ellipse(400,320,300,200,0,0,7); x.fill(); x.fillStyle=c1; x.beginPath(); x.ellipse(400,310,280,180,0,0,7); x.fill(); x.strokeStyle="#F4EDE1"; x.lineWidth=18; x.lineCap="round"; for(let i=0;i<3;i++){ x.beginPath(); x.moveTo(280+i*110,380); x.lineTo(350+i*110,230); x.stroke(); } return cv.toDataURL("image/jpeg",.8); };
   const me = { id:"u1", username:"kasper", display_name:"Kasper" };
-  const people = [me, {id:"u2",username:"mette.bager",display_name:"Mette Holm",avatar:pic("#D9A86A","#8E5A2C")}, {id:"u3",username:"jonas_rug",display_name:"Jonas"}, {id:"u4",username:"sofie",display_name:"Sofie Lund"}, {id:"u5",username:"sofus",display_name:"Sofus"}];
+  const people = [me, {id:"u2",username:"mette.bager",display_name:"Mette Holm",avatar:pic("#D9A86A","#8E5A2C")}, {id:"u3",username:"jonas_rug",display_name:"Jonas"}, {id:"u4",username:"sofie",display_name:"Sofie Lund"}, {id:"u5",username:"sofus",display_name:"Sofus"}, {id:"u6",username:"ida.k",display_name:"Ida Kjær"}];
   const imgs = { "d/1":pic("#C98A4B","#7A4A20"), "d/2":pic("#B9773A","#6B3E18"), "d/3":pic("#D9A86A","#8E5A2C"), "d/4":pic("#A86A33","#5A3414") };
-  let friends = [{id:1,requester:"u1",addressee:"u2",status:"accepted"},{id:2,requester:"u3",addressee:"u1",status:"accepted"},{id:3,requester:"u4",addressee:"u1",status:"pending"}], fid=10;
+  let friends = [{id:1,requester:"u1",addressee:"u2",status:"accepted"},{id:2,requester:"u3",addressee:"u1",status:"accepted"},{id:3,requester:"u4",addressee:"u1",status:"pending"},{id:4,requester:"u1",addressee:"u6",status:"accepted"}], fid=10;
   let rows = [
     {id:"x1",user_id:"u2",date:"2026-10-12",name:"Rugbrød med solsikke",kind:"bread",overall:5,caption:"Endelig et rugbrød der ikke er klægt i midten! 18 timer i køleskabet gjorde forskellen.",pics:["d/4","d/2"],data:{flours:[{type:"Fuldkornsrugmel",g:600},{type:"Rugmel",g:200}],water:700,starter:150,salt:16,time:75,temp:180,ovenMode:"overunder",created:5}},
     {id:"x2",user_id:"u3",date:"2026-10-11",name:"Speltboller",kind:"buns",overall:4,caption:"Søndagsboller til hele familien.",pics:["d/3"],data:{flours:[{type:"Spelt",g:500}],water:330,starter:100,salt:10,time:18,temp:220,ovenMode:"varmluft",created:4}},
@@ -712,6 +732,7 @@ function demoApi(){
     async usernameAvailable(nm){ return !people.some(p=>p.username===nm); },
     async profile(id){ return people.find(p=>p.id===id)||null; },
     async profiles(ids){ return people.filter(p=>ids.includes(p.id)); },
+    async profileByUsername(u){ return people.find(p=>p.username===u)||null; },
     async bakes(){ const vis = id => id==="u1" || friends.some(f=>f.status==="accepted"&&((f.requester==="u1"&&f.addressee===id)||(f.addressee==="u1"&&f.requester===id))); return rows.filter(r=>vis(r.user_id)).map(fromRow).sort(byNewest); },
     async saveBake(b){ const r=toRow(b); r.user_id="u1"; rows=rows.filter(x=>x.id!==r.id); rows.push(r); },
     async deleteBake(b){ rows=rows.filter(x=>x.id!==b.id); },
@@ -783,14 +804,14 @@ function wireGallery(root){
 }
 
 /* ---------- navigation ---------- */
-const VIEWS = ["auth","feed","home","recipe","bake","friends","form","install"];
-let current = "feed", curRecipe = null, curBake = null, backTo = "feed";
+const VIEWS = ["auth","feed","home","recipe","bake","profile","friends","form","install"];
+let current = "feed", curRecipe = null, curBake = null, backTo = "feed", bakeRet = null, curProfile = null, profileRet = null;
 function show(v){
   current = v;
   VIEWS.forEach(x=>{ $("#v-"+x).hidden = x!==v; });
-  const navKey = (v==="recipe"||v==="bake") ? backTo : v;
+  const navKey = (v==="recipe"||v==="bake"||v==="profile") ? backTo : v;
   $$("nav.menu button").forEach(b=>{ if(b.dataset.nav===navKey) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
-  $("#menu").hidden = ["auth","install","recipe","bake"].includes(v) || !me;
+  $("#menu").hidden = ["auth","install","recipe","bake","profile"].includes(v) || !me;
   window.scrollTo(0,0);
 }
 $$("nav.menu button").forEach(b=>b.onclick=()=>{
@@ -973,7 +994,7 @@ function renderFeed(){
     const p = personOf(b.user_id), c = calc(b);
     const tick = [kindName(b.kind), Math.round(c.flourG)+" g mel", b.time?b.time+" min":"", ovenLabel(b.ovenMode), b.bakedOn||""].filter(Boolean);
     return `<article class="post">
-      <div class="who">${av(p)}<span class="nm"><b>${esc(b.user_id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)} · ${esc(shortDate(b.date))}</small></span>
+      <div class="who">${av(p, ` data-uid="${esc(p.id)}"`)}<span class="nm" data-uid="${esc(p.id)}"><b>${esc(b.user_id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)} · ${esc(shortDate(b.date))}</small></span>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</div>
       ${galleryHtml(picsOf(b), b.name||"bagningen")}
       <button class="pbody" type="button" data-bake="${esc(b.id)}"><span class="ptitle">${esc(b.name||"Uden navn")}</span>${b.caption?`<p class="cap">${rich(b.caption)}</p>`:""}<span class="ticket">${tick.map(t=>`<span>${esc(t)}</span>`).join("")}</span></button>
@@ -1063,10 +1084,85 @@ function openRecipe(key){
   show("recipe");
 }
 
+/* ---------- profiler ---------- */
+// Husk hvor man kom fra, så "tilbage" lander det rigtige sted (også midt i feedet).
+function here(){
+  const v = current, y = window.scrollY;
+  if(v==="bake"){ const id=curBake, r=bakeRet; return ()=>openBake(id, false, r); }
+  if(v==="recipe"){ const k=curRecipe; return ()=>openRecipe(k); }
+  if(v==="profile"){ const id=curProfile, r=profileRet; return ()=>openProfile(id, r); }
+  return ()=>{ show(v); render(); requestAnimationFrame(()=>window.scrollTo(0,y)); };
+}
+const genitive = nm => /[sxz]$/i.test(nm) ? nm+"'" : nm+"s";
+const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function relationHtml(uid){
+  if(uid===me.id) return `<button class="btn sm" type="button" data-goto="friends">Profilbillede og konto</button>`;
+  const f = relationTo(uid);
+  if(!f) return `<button class="btn primary" type="button" data-req="${esc(uid)}">Tilføj som ven</button>`;
+  if(f.status==="accepted") return `<span class="badge-ok">${checkSvg}I er venner</span>`;
+  if(f.requester===me.id) return `<button class="btn" type="button" data-rm="${f.id}" data-label="Annullér anmodning">Annullér anmodning</button>`;
+  return `<button class="btn primary" type="button" data-acc="${f.id}">Godkend venneanmodning</button>`;
+}
+function openProfile(uid, ret){
+  curProfile = uid; profileRet = ret || null;
+  const p = personOf(uid), own = uid===me.id;
+  const f = own ? null : relationTo(uid), friends = own || (f && f.status==="accepted");
+  const list = bakes.filter(b=>b.user_id===uid).sort(byNewest);
+  const rated = list.filter(b=>b.overall), avg = rated.length ? rated.reduce((s,b)=>s+n(b.overall),0)/rated.length : 0;
+  const crisp = list.reduce((s,b)=>s+((likes.get(b.id)||[]).length),0);
+  const v = $("#v-profile");
+  let body;
+  if(!friends) body = `<div class="empty"><h2>Kun for venner</h2><p>Bliv venner med ${esc(nameOf(p))} for at se bagningerne.</p></div>`;
+  else if(!list.length) body = own
+    ? `<div class="empty"><h2>Ingen bagninger endnu</h2><p>Når du logger en bagning, kommer den her.</p><button class="btn primary" type="button" data-new>Ny bagning</button></div>`
+    : `<div class="empty"><h2>Ingen bagninger endnu</h2><p>${esc(nameOf(p))} har ikke lagt nogen bagninger op endnu.</p></div>`;
+  else body = `<div class="grid">${list.map(b=>`
+    <button class="tile" type="button" data-bake="${esc(b.id)}">
+      <span class="pic">${picsOf(b)[0]?img(picsOf(b)[0],"Billede af "+(b.name||"bagningen")):noimg()}
+        ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</span>
+      <b>${esc(b.name||"Uden navn")}</b><span class="when">${esc(shortDate(b.date))}</span>
+    </button>`).join("")}</div>`;
+  v.innerHTML = `
+    <div class="ptop"><button class="circle back" type="button" aria-label="Tilbage">${backSvg}</button><span>@${esc(p.username)}</span></div>
+    <div class="phero">${av(p)}<h1>${esc(nameOf(p))}</h1><div class="meta">@${esc(p.username)}${own?" · din profil":""}</div>
+      <div class="rel">${relationHtml(uid)}</div></div>
+    ${friends?`<div class="stats pstats"><div><b>${list.length}</b><span>${list.length===1?"bagning":"bagninger"}</span></div><div><b>${avg?dec(avg)+" ★":"–"}</b><span>gns. bedømmelse</span></div><div><b>${crisp}</b><span>× sprødt</span></div></div>`:""}
+    <div class="psec"><h2>${own?"Dine bagninger":esc(genitive(nameOf(p)))+" bagninger"}</h2></div>
+    ${body}`;
+  hydrate(v);
+  v.querySelector(".back").onclick = ()=>{ if(profileRet) profileRet(); else { show(backTo); render(); } };
+  const self = ()=>openProfile(uid, ret);
+  v.querySelectorAll("[data-bake]").forEach(x=>x.onclick=()=>openBake(x.dataset.bake, false, self));
+  const g = v.querySelector("[data-goto]"); if(g) g.onclick=()=>{ backTo="friends"; show("friends"); renderFriends(); };
+  wireFriendButtons(v, self);
+  show("profile");
+}
+async function openUser(uid, username){
+  let id = uid;
+  if(!id){
+    const known = [...people.values()].find(p=>p.username===username);
+    if(known) id = known.id;
+    else { try{ const p = await api.profileByUsername(username); if(p){ people.set(p.id,p); id=p.id; } }catch(e){} }
+    if(!id){ toast("Der findes ingen bruger med navnet @"+username+"."); return; }
+  }
+  if(!people.has(id)) try{ (await api.profiles([id])).forEach(p=>people.set(p.id,p)); }catch(e){}
+  const ret = here();
+  const sheet = document.querySelector(".sheetbg"); if(sheet) sheet.remove();
+  openProfile(id, ret);
+}
+// Tryk på et navn, et profilbillede eller et @tag → profil. Fanges før knappen under (fx opslaget).
+document.addEventListener("click", e=>{
+  if(!me) return;
+  const t = e.target.closest("[data-uid],[data-user]"); if(!t) return;
+  if(t.closest(".mbox")) return;
+  e.preventDefault(); e.stopPropagation();
+  openUser(t.dataset.uid, t.dataset.user);
+}, true);
+
 /* ---------- bake page ---------- */
-function openBake(id, focusComment){
-  const b = bakes.find(x=>x.id===id); if(!b){ show(backTo); render(); return; }
-  curBake = id;
+function openBake(id, focusComment, ret){
+  const b = bakes.find(x=>x.id===id); if(!b){ if(ret) ret(); else { show(backTo); render(); } return; }
+  curBake = id; bakeRet = ret || null;
   const own = b.user_id===me.id, p = personOf(b.user_id), c = calc(b), ps = picsOf(b);
   const sub = [["Hævning",b.rise],["Krumme",b.crumb],["Skorpe",b.crust],["Smag",b.taste]].filter(x=>x[1]);
   const times = [b.bulk?fmt(b.bulk)+" t hævning":"", b.cold?fmt(b.cold)+" t køleskab":"", b.proof?fmt(b.proof)+" t efterhævning":""].filter(Boolean);
@@ -1079,7 +1175,7 @@ function openBake(id, focusComment){
       ${ps.length>1?`<span class="count">1 / ${ps.length}</span>`:""}
     </div>
     <div class="sheet">
-      ${own?"":`<div class="byline">${av(p)}<span><b>${esc(nameOf(p))}</b> <span class="muted">@${esc(p.username)}</span></span></div>`}
+      ${own?"":`<div class="byline" data-uid="${esc(p.id)}">${av(p)}<span><b>${esc(nameOf(p))}</b> <span class="muted">@${esc(p.username)}</span></span></div>`}
       <div class="titlerow"><div><h1>${esc(b.name||"Uden navn")}</h1><div class="meta">${kindName(b.kind)} · ${esc(dateFmt(b.date))}</div></div>
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</div>
       ${b.caption?`<p class="cap">${rich(b.caption)}</p>`:""}
@@ -1109,7 +1205,7 @@ function openBake(id, focusComment){
       </div>
     </div>`;
   hydrate(v); wireGallery(v); wireSocial(v);
-  const goBack = ()=>{ const r = recipes().find(x=>x.key===keyOf(b.name)); if(own && backTo==="home" && r) openRecipe(r.key); else { show(backTo); render(); } };
+  const goBack = ()=>{ if(bakeRet){ bakeRet(); return; } const r = recipes().find(x=>x.key===keyOf(b.name)); if(own && backTo==="home" && r) openRecipe(r.key); else { show(backTo); render(); } };
   v.querySelector(".back").onclick = goBack;
   $("#bAgain").onclick = ()=>openForm(b,true);
   if(own){
@@ -1129,7 +1225,7 @@ const bubbleSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 /* ---------- tags (@brugernavn) ---------- */
 const MENTION_RE = /(^|[^a-z0-9_.@])@([a-z0-9_.]{3,24})/gi;
 function rich(text){
-  return esc(text).replace(MENTION_RE, (m, pre, u)=>{ const t=u.replace(/\.+$/,""), rest=u.slice(t.length); return t.length>=3 ? `${pre}<span class="mention">@${t}</span>${rest}` : m; });
+  return esc(text).replace(MENTION_RE, (m, pre, u)=>{ const t=u.replace(/\.+$/,""), rest=u.slice(t.length); return t.length>=3 ? `${pre}<span class="mention" data-user="${t.toLowerCase()}">@${t}</span>${rest}` : m; });
 }
 const friendIds = () => friendships.filter(f=>f.status==="accepted").map(f=>f.requester===me.id?f.addressee:f.requester);
 function mentionable(b){
@@ -1227,7 +1323,7 @@ async function showLikers(ids){
   if(missing.length) try{ (await api.profiles(missing)).forEach(p=>people.set(p.id,p)); }catch(e){}
   const bg = document.createElement("div"); bg.className="sheetbg";
   bg.innerHTML = `<div class="lsheet" role="dialog" aria-modal="true" aria-label="Sprødt!"><div class="grab"></div><h2>${crustSvg}${esc(sprodtCount(ids.length))}</h2>
-    ${[...ids].reverse().map(id=>{ const p=personOf(id); return `<div class="lrow">${av(p)}<span><b>${esc(id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)}</small></span></div>`; }).join("")}</div>`;
+    ${[...ids].reverse().map(id=>{ const p=personOf(id); return `<div class="lrow" data-uid="${esc(p.id)}">${av(p)}<span><b>${esc(id===me.id?"Dig":nameOf(p))}</b><small>@${esc(p.username)}</small></span></div>`; }).join("")}</div>`;
   const close = ()=>{ bg.remove(); document.removeEventListener("keydown", esc_); };
   const esc_ = e=>{ if(e.key==="Escape") close(); };
   bg.onclick = e=>{ if(e.target===bg) close(); };
@@ -1240,7 +1336,7 @@ async function loadComments(b, focus){
   const draw = () => {
     list.innerHTML = cs.length ? cs.map(c=>{ const p=personOf(c.user_id); const canDel = c.user_id===me.id || b.user_id===me.id;
       const lk = cl.get(c.id)||[], mineL = lk.includes(me.id);
-      return `<div class="cm">${av(p)}<div class="bub"><div class="cmtop"><span><b>${esc(c.user_id===me.id?"Dig":nameOf(p))}</b> · ${esc(ago(c.created_at))}</span><span class="cmright"><button class="cmlike${popId===c.id?" pop":""}" type="button" data-clike="${c.id}" aria-pressed="${mineL}" aria-label="${mineL?"Fjern sprødt":"Sprødt!"}${lk.length?" ("+lk.length+")":""}">${crustSvg}${lk.length?`<span>${lk.length}</span>`:""}</button>${c.user_id===me.id && editId!==c.id?`<button class="del" type="button" data-edit="${c.id}">Ret</button>`:""}${canDel && editId!==c.id?`<button class="del" type="button" data-del="${c.id}">Slet</button>`:""}</span></div>${editId===c.id
+      return `<div class="cm">${av(p, ` data-uid="${esc(p.id)}"`)}<div class="bub"><div class="cmtop"><span><b data-uid="${esc(p.id)}">${esc(c.user_id===me.id?"Dig":nameOf(p))}</b> · ${esc(ago(c.created_at))}</span><span class="cmright"><button class="cmlike${popId===c.id?" pop":""}" type="button" data-clike="${c.id}" aria-pressed="${mineL}" aria-label="${mineL?"Fjern sprødt":"Sprødt!"}${lk.length?" ("+lk.length+")":""}">${crustSvg}${lk.length?`<span>${lk.length}</span>`:""}</button>${c.user_id===me.id && editId!==c.id?`<button class="del" type="button" data-edit="${c.id}">Ret</button>`:""}${canDel && editId!==c.id?`<button class="del" type="button" data-del="${c.id}">Slet</button>`:""}</span></div>${editId===c.id
         ? `<div class="cmedit"><label class="vh" for="cmEdit">Ret kommentar</label><textarea id="cmEdit" rows="2" maxlength="1000">${esc(c.body)}</textarea><div class="mbox" id="cmEditMentions" role="listbox" aria-label="Tag en ven" hidden></div><div class="cmeditbtns"><button class="btn sm" type="button" data-cancel>Annullér</button><button class="btn sm primary" type="button" data-save="${c.id}">Gem</button></div></div>`
         : `<p>${rich(c.body)}${c.edited_at?' <span class="edited">· redigeret</span>':""}</p>`}</div></div>`; }).join("")
       : '<p class="muted" style="margin:0">Ingen kommentarer endnu. Skriv den første.</p>';
@@ -1301,7 +1397,7 @@ async function doSearch(q){
     const state = !f ? `<button class="btn sm primary" type="button" data-req="${esc(p.id)}">Tilføj</button>`
       : f.status==="accepted" ? `<span class="meta">Venner</span>`
       : f.requester===me.id ? `<span class="meta">Anmodet</span>` : `<button class="btn sm primary" type="button" data-acc="${f.id}">Godkend</button>`;
-    return `<div class="row">${av(p)}<span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${state}</span></div>`;
+    return `<div class="row">${av(p, ` data-uid="${esc(p.id)}"`)}<span class="tx" data-uid="${esc(p.id)}"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${state}</span></div>`;
   }).join("") : '<p class="muted" style="margin:0">Ingen brugere fundet.</p>';
   wireFriendButtons(box, ()=>doSearch(q));
 }
@@ -1314,9 +1410,10 @@ function wireFriendButtons(root, after){
 }
 function renderFriends(){
   if(!me) return;
+  $("#myProfile").onclick = ()=>openProfile(me.id, here());
   $("#meAv").innerHTML = me.avatar ? `<img src="${esc(avatarUrl(me.avatar))}" alt="Dit profilbillede">` : esc(initials(me)); $("#avLbl").textContent = me.avatar ? "Skift billede" : "Tilføj billede"; $("#meName").textContent = nameOf(me) || "Dig"; $("#meUser").textContent = "@"+me.username;
   const other = f => personOf(f.requester===me.id ? f.addressee : f.requester);
-  const row = (p, acts) => `<div class="row">${av(p)}<span class="tx"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${acts}</span></div>`;
+  const row = (p, acts) => `<div class="row">${av(p, ` data-uid="${esc(p.id)}"`)}<span class="tx" data-uid="${esc(p.id)}"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${acts}</span></div>`;
   const inc = friendships.filter(f=>f.status==="pending"&&f.addressee===me.id);
   const out = friendships.filter(f=>f.status==="pending"&&f.requester===me.id);
   const acc = friendships.filter(f=>f.status==="accepted");
