@@ -169,3 +169,8 @@ grant update (display_name) on public.profiles to authenticated;
 
 -- ---------- brugernavne med æ, ø og å ----------
 -- Migration "username_aeoeaa": profiles_username_check er nu '^[a-z0-9_.æøå]{3,24}$'.
+
+-- ---------- skift brugernavn ----------
+-- Migrationer "change_username" + "change_username_lookahead": grant update(username) på profiles;
+-- trigger profiles_rename_mentions retter gamle @tags i bakes.caption og comments.body.
+-- Under omdøbning (app.renaming = '1') sendes ingen push, og kommentarer markeres ikke som redigeret.

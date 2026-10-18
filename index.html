@@ -504,6 +504,13 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
   <div class="section"><h2>Dine venner</h2><div class="rows" id="friendRows"></div><p class="muted" id="noFriends" style="margin:0" hidden>Du har ingen venner endnu. Søg på din vens brugernavn ovenfor.</p></div>
   <div class="section" id="outgoingSec" hidden><h2>Sendte anmodninger</h2><div class="rows" id="outgoingRows"></div></div>
   <div class="section">
+    <h2>Skift brugernavn</h2>
+    <label class="f" for="newUser">Nyt brugernavn <span class="u">3–24 tegn: a–å, 0–9, . og _</span><input type="text" id="newUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+    <p class="meta" style="margin:0">Dine venner finder dig under det nye navn, og gamle @tags bliver rettet til det nye navn.</p>
+    <button class="btn" type="button" id="newUserBtn">Gem brugernavn</button>
+    <p id="newUserMsg" aria-live="polite" hidden></p>
+  </div>
+  <div class="section">
     <h2>Skift adgangskode</h2>
     <label class="f" for="newPass">Ny adgangskode <span class="u">mindst 6 tegn</span><input type="password" id="newPass" autocomplete="new-password"></label>
     <button class="btn" type="button" id="newPassBtn">Gem ny adgangskode</button>
@@ -717,6 +724,7 @@ function realApi(){
     async uploadAvatar(path, blob){ const { error } = await sb.storage.from("avatars").upload(path, blob, { contentType:"image/jpeg", upsert:false }); fail(error); },
     async removeAvatar(path){ if(path) await sb.storage.from("avatars").remove([path]); },
     async setAvatar(myId, path){ const { error } = await sb.from("profiles").update({ avatar:path }).eq("id", myId); fail(error); },
+    async setUsername(myId, username){ const { error } = await sb.from("profiles").update({ username }).eq("id", myId); fail(error); },
     async savePush(s){ await sb.from("push_subscriptions").delete().eq("endpoint", s.endpoint); const { error } = await sb.from("push_subscriptions").insert(s); fail(error); },
     async deletePush(endpoint){ await sb.from("push_subscriptions").delete().eq("endpoint", endpoint); },
     async comments(bakeId){ const { data, error } = await sb.from("comments").select("id,bake_id,user_id,body,created_at,edited_at").eq("bake_id", bakeId).order("created_at"); fail(error); return data||[]; },
@@ -748,7 +756,7 @@ function demoApi(){
   let cid = 100, comments = [
     {id:1,bake_id:"x1",user_id:"u3",body:"Den ser fantastisk ud! Hvor meget rug brugte du?",created_at:new Date(Date.now()-3*3600e3).toISOString()},
     {id:2,bake_id:"x1",user_id:"u2",body:"@jonas_rug 600 g fuldkornsrug og 200 g almindelig rugmel 🙂",created_at:new Date(Date.now()-2*3600e3).toISOString()},
-    {id:3,bake_id:"x3",user_id:"u2",body:"Flot åben krumme!",created_at:new Date(Date.now()-26*3600e3).toISOString()}];
+    {id:3,bake_id:"x3",user_id:"u2",body:"Flot åben krumme, @kasper!",created_at:new Date(Date.now()-26*3600e3).toISOString()}];
   let blikes = [{bake_id:"x1",user_id:"u3"},{bake_id:"x1",user_id:"u4"},{bake_id:"x1",user_id:"u5"},{bake_id:"x3",user_id:"u2"},{bake_id:"x3",user_id:"u3"}];
   let clikes = [{comment_id:1,user_id:"u2"},{comment_id:3,user_id:"u1"}];
   let session = lsGet("demoIn") ? { user:{ id:"u1" } } : null; let cb = ()=>{};
@@ -787,6 +795,7 @@ function demoApi(){
     async uploadAvatar(path, blob){ imgs["av:"+path]=URL.createObjectURL(blob); },
     async removeAvatar(){},
     async setAvatar(id, path){ const p=people.find(x=>x.id===id); p.avatar=imgs["av:"+path]; },
+    async setUsername(id, u){ const p=people.find(x=>x.id===id), old=p.username; p.username=u; const re=new RegExp("(^|[^a-z0-9_.æøå@])@"+old.replace(/\./g,"\\.")+"(?![a-z0-9_æøå]|\\.[a-z0-9_æøå])","gi"); rows.forEach(r=>{ if(r.caption) r.caption=r.caption.replace(re,"$1@"+u); }); comments.forEach(c=>{ c.body=c.body.replace(re,"$1@"+u); }); },
     async savePush(){}, async deletePush(){}
   };
 }
@@ -1061,6 +1070,21 @@ function goHash(url){
   else if(h.startsWith("bake-")){ backTo="feed"; loadAll().catch(()=>{}).then(()=>{ if(bakes.some(b=>b.id===h.slice(5))) openBake(h.slice(5)); else { show("feed"); renderFeed(); } }); }
   else { backTo="feed"; show("feed"); loadAll().then(renderFeed).catch(()=>renderFeed()); }
 }
+$("#newUserBtn").onclick = async ()=>{
+  const inp=$("#newUser"), msg=$("#newUserMsg"), btn=$("#newUserBtn"), u=inp.value.trim().toLowerCase(); msg.hidden=false;
+  const bad = t => { msg.className="err"; msg.textContent=t; };
+  if(u===me.username){ bad("Det er allerede dit brugernavn."); return; }
+  if(!/^[a-z0-9_.æøå]{3,24}$/.test(u)){ bad("Brugernavnet skal være 3–24 tegn og må kun indeholde a–å, 0–9, punktum og bundstreg."); return; }
+  btn.disabled=true;
+  try{
+    if(!(await api.usernameAvailable(u))){ bad(`Brugernavnet “${u}” er taget. Prøv et andet.`); btn.disabled=false; return; }
+    await api.setUsername(me.id, u);
+    me.username=u; people.set(me.id, me); inp.value=u;
+    try{ bakes = await api.bakes(); }catch(e){}
+    renderFriends(); msg.className="ok"; msg.textContent="Dit brugernavn er nu @"+u+".";
+  }catch(e){ bad(e && e.code==="23505" ? `Brugernavnet “${u}” er taget. Prøv et andet.` : authErrText(e)); }
+  btn.disabled=false;
+};
 $("#newPassBtn").onclick = async ()=>{
   const pw=$("#newPass").value, msg=$("#newPassMsg"); msg.hidden=false;
   if(pw.length<6){ msg.className="err"; msg.textContent="Adgangskoden skal være på mindst 6 tegn."; return; }
@@ -1558,6 +1582,7 @@ function wireFriendButtons(root, after){
 function renderFriends(){
   if(!me) return;
   $("#myProfile").onclick = ()=>openProfile(me.id, here());
+  if(document.activeElement!==$("#newUser")) $("#newUser").value = me.username||"";
   $("#meAv").innerHTML = me.avatar ? `<img src="${esc(avatarUrl(me.avatar))}" alt="Dit profilbillede">` : esc(initials(me)); $("#avLbl").textContent = me.avatar ? "Skift billede" : "Tilføj billede"; $("#meName").textContent = nameOf(me) || "Dig"; $("#meUser").textContent = "@"+me.username;
   const other = f => personOf(f.requester===me.id ? f.addressee : f.requester);
   const row = (p, acts) => `<div class="row">${av(p, ` data-uid="${esc(p.id)}"`)}<span class="tx" data-uid="${esc(p.id)}"><b>${esc(nameOf(p))}</b><span>@${esc(p.username)}</span></span><span class="acts">${acts}</span></div>`;
