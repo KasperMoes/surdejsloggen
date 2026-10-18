@@ -31,7 +31,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;background:var(--bg)}
+html{overscroll-behavior-y:none;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;background:var(--bg)}
 body{margin:0 auto;max-width:640px;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 img{max-width:100%}
 h1,h2,h3{font-family:var(--display);font-weight:900;text-transform:uppercase;margin:0;line-height:1;text-wrap:balance}
@@ -292,6 +292,15 @@ nav.menu button{font-weight:500}
 form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 .cmform textarea{min-height:46px;flex:1;resize:none;padding:12px}
 .cmform .btn{padding:12px 16px}
+/* ---------- træk ned for at opdatere ---------- */
+.ptr{height:0;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
+.ptr.anim{transition:height .25s ease}
+.ptr .spin{width:34px;height:34px;margin-bottom:10px;border-radius:50%;background:var(--surf);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.ptr svg{width:20px;height:20px;overflow:visible}
+.ptr .crust{fill:none;stroke:currentColor}.ptr .crk{stroke:currentColor}.ptr .spark{display:none}
+.ptr.ready .crust{fill:var(--accent)}.ptr.ready .crk{stroke:#fff}
+.ptr.busy .spin svg{animation:ptrspin .8s linear infinite}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
 /* ---------- billeder i fuld størrelse ---------- */
 .gallery img{cursor:zoom-in}
 .lb{position:fixed;inset:0;z-index:90;background:#0d0a08;display:flex;flex-direction:column;touch-action:none;transition:background .2s}
@@ -422,7 +431,8 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 
 <!-- FEED -->
 <section id="v-feed" hidden>
-  <div class="phead"><h1>Feed</h1><button class="smallbtn" type="button" id="refreshBtn">Opdatér</button></div>
+  <div class="phead"><h1>Feed</h1></div>
+  <div class="ptr" aria-hidden="true"><span class="spin"></span></div>
   <div id="migrateBox"></div>
   <div class="feed" id="feedList"></div>
   <div class="empty" id="feedEmpty" hidden>
@@ -471,6 +481,7 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 <!-- FRIENDS -->
 <section id="v-friends" hidden>
   <div class="phead"><h1>Venner</h1><button class="smallbtn" type="button" id="logoutBtn">Log ud</button></div>
+  <div class="ptr" aria-hidden="true"><span class="spin"></span></div>
   <div class="section">
     <div class="me">
       <label class="avpick" for="avatarFile"><span class="av" id="meAv"></span><span id="avLbl">Skift billede</span><input type="file" id="avatarFile" accept="image/*" class="vh"></label>
@@ -1078,7 +1089,46 @@ async function enter(session){
 function leave(){ me=null; bakes=[]; friendships=[]; people=new Map(); show("auth"); }
 
 /* ---------- feed ---------- */
-$("#refreshBtn").onclick = async ()=>{ const b=$("#refreshBtn"); b.disabled=true; try{ await loadAll(); renderFeed(); }catch(e){ toast("Ingen forbindelse."); } b.disabled=false; };
+// Træk ned øverst i Feed eller Venner for at hente nyt – som på Instagram.
+let lastLoad = Date.now();
+async function refreshNow(){
+  try{ await loadAll(); lastLoad = Date.now(); if(current==="feed") renderFeed(); if(current==="friends") renderFriends(); }
+  catch(e){ toast("Ingen forbindelse. Prøv igen om lidt."); }
+}
+(function pullToRefresh(){
+  const TRIG = 70, MAX = 110;
+  let start = null, pull = 0, busy = false, box = null;
+  const boxFor = () => { const v = $("#v-"+current); return v ? v.querySelector(".ptr") : null; };
+  const set = (h, anim) => { box.classList.toggle("anim", !!anim); box.style.height = h+"px"; };
+  addEventListener("touchstart", e=>{
+    if(busy || !me || e.touches.length!==1 || !["feed","friends"].includes(current) || window.scrollY>0 || document.querySelector(".lb,.sheetbg")) { start=null; return; }
+    box = boxFor(); if(!box) return;
+    if(!box.firstElementChild.innerHTML) box.firstElementChild.innerHTML = crustSvg;
+    start = {y:e.touches[0].clientY, x:e.touches[0].clientX}; pull = 0;
+  },{passive:true});
+  addEventListener("touchmove", e=>{
+    if(!start) return;
+    const dy = e.touches[0].clientY - start.y, dx = e.touches[0].clientX - start.x;
+    if(pull===0 && (dy<=0 || Math.abs(dx)>Math.abs(dy) || window.scrollY>0)){ if(dy<0||Math.abs(dx)>Math.abs(dy)) start=null; return; }
+    e.preventDefault();
+    pull = Math.min(MAX, dy*0.5);
+    set(pull); box.classList.toggle("ready", pull>=TRIG);
+    box.querySelector("svg").style.transform = `rotate(${Math.min(1,pull/TRIG)*360}deg)`;
+  },{passive:false});
+  addEventListener("touchend", async ()=>{
+    if(!start) return; start = null;
+    if(pull < TRIG){ set(0, true); box.classList.remove("ready"); pull=0; return; }
+    busy = true; box.classList.remove("ready"); box.classList.add("busy"); box.querySelector("svg").style.transform=""; set(56, true);
+    if(navigator.vibrate) try{ navigator.vibrate(10); }catch(e){}
+    const t0 = Date.now(); await refreshNow();
+    await new Promise(r=>setTimeout(r, Math.max(0, 500-(Date.now()-t0))));
+    box.classList.remove("busy"); set(0, true); busy = false; pull = 0;
+  });
+})();
+// Kommer man tilbage til appen efter et stykke tid, hentes nyt af sig selv.
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState==="visible" && me && Date.now()-lastLoad > 60e3 && ["feed","friends"].includes(current)) refreshNow();
+});
 function galleryHtml(ps, alt){
   if(!ps.length) return "";
   return `<div class="pgal" data-gal><div class="gallery">${ps.map((p,i)=>img(p,`Billede ${i+1} af ${alt}`)).join("")}</div>${ps.length>1?`<span class="count">1 / ${ps.length}</span>`:""}</div>`;
