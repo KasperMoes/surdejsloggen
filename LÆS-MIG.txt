@@ -29,5 +29,5 @@ VIGTIGT
 - Data i Safari og i appen på hjemmeskærmen er adskilt. Brug appen fra hjemmeskærmen.
 
 NÅR DU LÆGGER EN NY UDGAVE OP
-Erstat filerne og hæv tallet i sw.js (CACHE = "surdejsloggen-v13" → "-v14"),
+Erstat filerne og hæv tallet i sw.js (CACHE = "surdejsloggen-v14" → "-v15"),
 så telefonerne henter den nye udgave.

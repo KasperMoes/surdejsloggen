@@ -453,7 +453,6 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
       <button class="tab" data-f="all" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>Alle</button>
       <button class="tab" data-f="bread" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 15c0-4.5 4-8 9-8s9 3.5 9 8v3H3z"/><path d="M8 11l1.5 2M12 10l1 2.3M16 11l1 2"/></svg>Brød</button>
       <button class="tab" data-f="buns" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8" cy="14" r="4.5"/><circle cx="16" cy="14" r="4.5"/></svg>Boller</button>
-      <button class="tab" data-f="five" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>5 stjerner</button>
       <div class="tab" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Sortér
         <select id="sortSel" aria-label="Sortér">
           <option value="new">Senest bagt</option>
@@ -1201,7 +1200,6 @@ function recipes(){
 function matches(b){
   if(filter==="bread" && b.kind!=="bread") return false;
   if(filter==="buns" && b.kind!=="buns") return false;
-  if(filter==="five" && n(b.overall)<5) return false;
   if(!query) return true;
   return [b.name, b.caption, b.notes, b.extras, b.bakedOn, b.foldMethod, ...(b.flours||[]).map(f=>f.type), shortDate(b.date)].join(" ").toLowerCase().includes(query);
 }
