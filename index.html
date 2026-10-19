@@ -330,7 +330,8 @@ form.cmform{padding:0;flex-direction:row;gap:8px;align-items:flex-end}
 .phero h1{font-size:2.1rem;line-height:1.05}
 .phero .meta{margin-top:-2px}
 .phero .rel{margin-top:10px}
-.pstats{margin:0 16px}
+.pcount{font-size:.9rem;margin-top:4px}
+.pcount b{font-size:1.05rem}
 .psec{padding:20px 16px 0}
 .psec h2{font-size:1.4rem;margin:0}
 #v-profile .grid{padding:12px 16px 0}
@@ -1277,8 +1278,6 @@ function openProfile(uid, ret){
   const p = personOf(uid), own = uid===me.id;
   const f = own ? null : relationTo(uid), friends = own || (f && f.status==="accepted");
   const list = bakes.filter(b=>b.user_id===uid).sort(byNewest);
-  const rated = list.filter(b=>b.overall), avg = rated.length ? rated.reduce((s,b)=>s+n(b.overall),0)/rated.length : 0;
-  const crisp = list.reduce((s,b)=>s+((likes.get(b.id)||[]).length),0);
   const v = $("#v-profile");
   let body;
   if(!friends) body = `<div class="empty"><h2>Kun for venner</h2><p>Bliv venner med ${esc(nameOf(p))} for at se bagningerne.</p></div>`;
@@ -1294,8 +1293,8 @@ function openProfile(uid, ret){
   v.innerHTML = `
     <div class="ptop"><button class="circle back" type="button" aria-label="Tilbage">${backSvg}</button><span>@${esc(p.username)}</span></div>
     <div class="phero">${av(p)}<h1>${esc(nameOf(p))}</h1><div class="meta">@${esc(p.username)}${own?" · din profil":""}</div>
+      ${friends?`<div class="pcount"><b>${list.length}</b> ${list.length===1?"bagning":"bagninger"}</div>`:""}
       <div class="rel">${relationHtml(uid)}</div></div>
-    ${friends?`<div class="stats pstats"><div><b>${list.length}</b><span>${list.length===1?"bagning":"bagninger"}</span></div><div><b>${avg?dec(avg)+" ★":"–"}</b><span>gns. bedømmelse</span></div><div><b>${crisp}</b><span>× sprødt</span></div></div>`:""}
     <div class="psec"><h2>${own?"Dine bagninger":esc(genitive(nameOf(p)))+" bagninger"}</h2></div>
     ${body}`;
   hydrate(v);
