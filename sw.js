@@ -1,6 +1,6 @@
 // Surdejsloggen – gør appen tilgængelig uden internet.
 // Hæv versionsnummeret, når du lægger en ny udgave op, så telefonerne henter den.
-const CACHE = "surdejsloggen-v14";
+const CACHE = "surdejsloggen-v15";
 const FILES = [
   "./",
   "./index.html",
@@ -23,14 +23,38 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== IMG_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
+// Billeder fra Supabase gemmes på telefonen, så de ikke hentes igen.
+// Billedlinkene har en adgangsnøgle, der skifter, så de gemmes under selve stien.
+const IMG_CACHE = "surdej-img-v1", IMG_MAX = 400;
+const isImage = u => /\.supabase\.co$/.test(u.hostname) && /\/storage\/v1\/object\/(sign|public)\//.test(u.pathname);
+async function cachedImage(req, url) {
+  const key = url.origin + url.pathname.replace("/object/sign/", "/object/public/");
+  const cache = await caches.open(IMG_CACHE);
+  const hit = await cache.match(key);
+  if (hit) return hit;
+  try {
+    const res = await fetch(url.href, { mode: "cors", credentials: "omit" });
+    if (res.ok) {
+      await cache.put(key, res.clone());
+      cache.keys().then(keys => { if (keys.length > IMG_MAX) keys.slice(0, keys.length - IMG_MAX).forEach(k => cache.delete(k)); });
+    }
+    return res;
+  } catch (err) {
+    return fetch(req);
+  }
+}
+
 self.addEventListener("fetch", e => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (isImage(url)) { e.respondWith(cachedImage(req, url)); return; }
+  if (url.origin !== self.location.origin) return;
   if (req.mode === "navigate") {
     // Siden selv: prøv nettet først, så nye udgaver kommer frem; ellers den gemte.
     e.respondWith(

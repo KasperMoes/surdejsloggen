@@ -707,9 +707,9 @@ function realApi(){
     async profiles(ids){ if(!ids.length) return []; const { data, error } = await sb.from("profiles").select("id,username,display_name,avatar").in("id", ids); fail(error); return data||[]; },
     async bakes(){ const { data, error } = await sb.from("bakes").select("*").order("date",{ascending:false}).order("created_at",{ascending:false}).limit(500); fail(error); return (data||[]).map(fromRow); },
     async saveBake(b){ const { error } = await sb.from("bakes").upsert(toRow(b)); fail(error); },
-    async deleteBake(b){ const { error } = await sb.from("bakes").delete().eq("id", b.id); fail(error); const ps = picsOf(b); if(ps.length) await sb.storage.from("photos").remove(ps); },
-    async uploadPhoto(path, blob){ const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: blob.type || "image/jpeg", upsert:false }); fail(error); },
-    async removePhotos(paths){ if(paths.length) await sb.storage.from("photos").remove(paths); },
+    async deleteBake(b){ const { error } = await sb.from("bakes").delete().eq("id", b.id); fail(error); const ps = picsOf(b); if(ps.length) await sb.storage.from("photos").remove([...ps, ...ps.map(thumbPath)]); },
+    async uploadPhoto(path, blob){ const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: blob.type || "image/jpeg", upsert:false, cacheControl:"31536000" }); fail(error); },
+    async removePhotos(paths){ if(paths.length) await sb.storage.from("photos").remove([...paths, ...paths.map(thumbPath)]); },
     async photoUrls(paths){
       const need = paths.filter(p=>!urlCache.has(p));
       if(need.length){ const { data, error } = await sb.storage.from("photos").createSignedUrls(need, 60*60*6); fail(error); (data||[]).forEach(d=>{ if(d.signedUrl) urlCache.set(d.path, d.signedUrl); }); }
@@ -826,12 +826,21 @@ async function loadAll(){
 function updateBadge(){ const k = friendships.filter(f=>f.status==="pending" && f.addressee===me.id).length; const b=$("#reqBadge"); b.hidden=!k; b.textContent=k; }
 
 /* ---------- photos ---------- */
-const img = (id, alt) => `<img data-photo="${esc(id)}" alt="${esc(alt)}">`;
+// Små billeder (fliser og rækker) bruger en miniature; findes den ikke, bruges det store billede
+const thumbPath = p => String(p||"").replace(/\.jpg$/i, ".t.jpg");
+const img = (id, alt, small) => small && /\.jpg$/i.test(id) ? `<img data-photo="${esc(thumbPath(id))}" data-full="${esc(id)}" alt="${esc(alt)}">` : `<img data-photo="${esc(id)}" alt="${esc(alt)}">`;
 async function hydrate(root){
   const els = Array.from(root.querySelectorAll("img[data-photo]")); if(!els.length) return;
   let urls = {};
-  try{ urls = await api.photoUrls([...new Set(els.map(e=>e.dataset.photo))]); }catch(e){}
-  els.forEach(el=>{ const u = urls[el.dataset.photo]; if(u){ el.src = u; el.addEventListener("error",()=>{ el.outerHTML = noimg(); },{once:true}); } else el.outerHTML = noimg(); });
+  try{ urls = await api.photoUrls([...new Set(els.flatMap(e=>[e.dataset.photo, e.dataset.full].filter(Boolean)))]); }catch(e){}
+  els.forEach(el=>{
+    const full = el.dataset.full && urls[el.dataset.full];
+    const gone = () => { el.outerHTML = noimg(); };
+    const u = urls[el.dataset.photo] || full;
+    if(!u){ gone(); return; }
+    el.addEventListener("error", () => { if(full && el.src !== full){ el.addEventListener("error", gone, {once:true}); el.src = full; } else gone(); }, {once:true});
+    el.src = u;
+  });
 }
 function wireGallery(root){
   root.querySelectorAll("[data-gal]").forEach(w=>{
@@ -1214,7 +1223,7 @@ function renderHome(){
   if(!has){ grid.innerHTML=""; return; }
   grid.innerHTML = list.map(b=>`
     <button class="tile" type="button" data-bake="${esc(b.id)}">
-      <span class="pic">${picsOf(b)[0]?img(picsOf(b)[0],"Billede af "+(b.name||"bagningen")):noimg()}
+      <span class="pic">${picsOf(b)[0]?img(picsOf(b)[0],"Billede af "+(b.name||"bagningen"),true):noimg()}
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}
       </span>
       <b>${esc(b.name||"Uden navn")}</b><span class="when">${esc(shortDate(b.date))}</span>
@@ -1243,7 +1252,7 @@ function openRecipe(key){
         ${r.avg?`<span class="stamp" style="--rot:${rot(r.key)}deg">${dec(r.avg)}</span>`:""}</div>
       <div class="stats"><div><b>${r.best?r.best+" ★":"–"}</b><span>bedste</span></div><div><b>${hyds.length?pct(hyds.reduce((s,x)=>s+x,0)/hyds.length):"–"}</b><span>gns. hydrering</span></div><div><b>${times.length?times[0]+" min":"–"}</b><span>seneste bagetid</span></div></div>
       <h2 style="font-size:1.5rem;margin-top:6px">Alle bagninger</h2>
-      <div class="rows">${r.bakes.map(b=>`<button class="row" type="button" data-bake="${esc(b.id)}"><span class="th">${picsOf(b)[0]?img(picsOf(b)[0],""):noimg()}</span><span class="tx"><b>${esc(shortDate(b.date))}${b.time?" · "+esc(b.time)+" min":""}</b><span>${esc(b.caption||b.notes||flourText(b))}</span></span>${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</button>`).join("")}</div>
+      <div class="rows">${r.bakes.map(b=>`<button class="row" type="button" data-bake="${esc(b.id)}"><span class="th">${picsOf(b)[0]?img(picsOf(b)[0],"",true):noimg()}</span><span class="tx"><b>${esc(shortDate(b.date))}${b.time?" · "+esc(b.time)+" min":""}</b><span>${esc(b.caption||b.notes||flourText(b))}</span></span>${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg">${n(b.overall)}/5</span>`:""}</button>`).join("")}</div>
     </div>
     <div class="bottombar"><span><b>Bag den igen</b>med ${r.best?"den bedste udgave":"seneste udgave"}</span><button class="btn primary" type="button" id="rAgain">Bag igen</button></div>`;
   v.style.paddingBottom="90px";
@@ -1286,7 +1295,7 @@ function openProfile(uid, ret){
     : `<div class="empty"><h2>Ingen bagninger endnu</h2><p>${esc(nameOf(p))} har ikke lagt nogen bagninger op endnu.</p></div>`;
   else body = `<div class="grid">${list.map(b=>`
     <button class="tile" type="button" data-bake="${esc(b.id)}">
-      <span class="pic">${picsOf(b)[0]?img(picsOf(b)[0],"Billede af "+(b.name||"bagningen")):noimg()}
+      <span class="pic">${picsOf(b)[0]?img(picsOf(b)[0],"Billede af "+(b.name||"bagningen"),true):noimg()}
         ${b.overall?`<span class="stamp" style="--rot:${rot(b.id)}deg" aria-label="${n(b.overall)} af 5 stjerner">${n(b.overall)}/5</span>`:""}</span>
       <b>${esc(b.name||"Uden navn")}</b><span class="when">${esc(shortDate(b.date))}</span>
     </button>`).join("")}</div>`;
@@ -1648,16 +1657,22 @@ function setPics(items){ picItems.forEach(it=>{ if(it.blob && it.url) try{ URL.r
 async function shrink(file){
   try{
     const bmp = await createImageBitmap(file, {imageOrientation:"from-image"});
-    const sc = Math.min(1, 1600/Math.max(bmp.width,bmp.height));
+    const sc = Math.min(1, 1080/Math.max(bmp.width,bmp.height));
     const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width*sc); cv.height = Math.round(bmp.height*sc);
     cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
-    return await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/jpeg",0.85));
+    const blob = await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/jpeg",0.78));
+    // Miniature: korteste side 360 px
+    const k = Math.min(1, 360/Math.min(cv.width, cv.height));
+    const t = document.createElement("canvas"); t.width = Math.round(cv.width*k); t.height = Math.round(cv.height*k);
+    t.getContext("2d").drawImage(cv,0,0,t.width,t.height);
+    blob.thumb = await new Promise(res=>t.toBlob(b=>res(b),"image/jpeg",0.7));
+    return blob;
   }catch(e){ return file; }
 }
 $("#f-photo").addEventListener("change", async e=>{
   const files = Array.from(e.target.files || []); e.target.value=""; if(!files.length) return;
   $("#photoLblTxt").textContent="Klargør billeder…";
-  for(const f of files){ const blob = await shrink(f); picItems.push({blob, url:URL.createObjectURL(blob)}); }
+  for(const f of files){ const blob = await shrink(f); picItems.push({blob, thumb: blob.thumb || null, url:URL.createObjectURL(blob)}); }
   renderThumbs();
 });
 function openForm(b, asNew){
@@ -1703,6 +1718,7 @@ $("#form").addEventListener("submit",async e=>{
       btn.textContent = `Uploader billede ${++k}…`;
       const path = `${me.id}/${id}-${Math.random().toString(36).slice(2,8)}.jpg`;
       await api.uploadPhoto(path, it.blob); pics.push(path); uploaded.push(path);
+      if(it.thumb) await api.uploadPhoto(thumbPath(path), it.thumb).catch(()=>{});
     }
     rec.pics = pics;
     btn.textContent="Gemmer…";
